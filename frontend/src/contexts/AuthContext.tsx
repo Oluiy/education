@@ -1,0 +1,132 @@
+'use client'
+
+import React, { createContext, useContext, useState, useEffect } from 'react'
+
+interface User {
+  id: string
+  email: string
+  name: string
+  role: 'student' | 'teacher' | 'parent' | 'admin'
+  avatar?: string
+}
+
+interface AuthContextType {
+  user: User | null
+  isLoading: boolean
+  login: (email: string, password: string) => Promise<void>
+  logout: () => void
+  signup: (userData: any) => Promise<void>
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}
+
+interface AuthProviderProps {
+  children: React.ReactNode
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    // Check for existing session on mount
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('auth_token')
+        if (token) {
+          // Validate token with backend
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+          
+          if (response.ok) {
+            const userData = await response.json()
+            setUser(userData)
+          } else {
+            localStorage.removeItem('auth_token')
+          }
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        localStorage.removeItem('auth_token')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    checkAuth()
+  }, [])
+
+  const login = async (email: string, password: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      })
+
+      if (!response.ok) {
+        throw new Error('Login failed')
+      }
+
+      const data = await response.json()
+      localStorage.setItem('auth_token', data.token)
+      setUser(data.user)
+    } catch (error) {
+      throw error
+    }
+  }
+
+  const signup = async (userData: any) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+      })
+
+      if (!response.ok) {
+        throw new Error('Signup failed')
+      }
+
+      const data = await response.json()
+      localStorage.setItem('auth_token', data.token)
+      setUser(data.user)
+    } catch (error) {
+      throw error
+    }
+  }
+
+  const logout = () => {
+    localStorage.removeItem('auth_token')
+    setUser(null)
+  }
+
+  const value = {
+    user,
+    isLoading,
+    login,
+    logout,
+    signup
+  }
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  )
+}

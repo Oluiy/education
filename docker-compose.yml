@@ -1,0 +1,182 @@
+version: '3.8'
+
+services:
+  # Database
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: edunerve
+      POSTGRES_PASSWORD: edunerve2024
+      POSTGRES_DB: edunerve
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - edunerve-network
+
+  # Redis for caching and rate limiting
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - edunerve-network
+
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://edunerve:edunerve2024@postgres:5432/edunerve
+      - AUTH_SERVICE_URL=http://auth-service:8001
+      - CONTENT_SERVICE_URL=http://content-quiz-service:8002
+      - FILE_STORAGE_SERVICE_URL=http://file-storage-service:8003
+      - SYNC_MESSAGING_SERVICE_URL=http://sync-messaging-service:8004
+      - ASSISTANT_SERVICE_URL=http://assistant-service:8005
+      - ADMIN_SERVICE_URL=http://admin-service:8006
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8007
+    depends_on:
+      - postgres
+      - redis
+      - auth-service
+      - content-quiz-service
+      - file-storage-service
+      - sync-messaging-service
+      - assistant-service
+      - admin-service
+      - notification-service
+    networks:
+      - edunerve-network
+
+  # Auth Service
+  auth-service:
+    build: ./services/auth-service
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql://edunerve:edunerve2024@postgres:5432/edunerve
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - REDIS_URL=redis://redis:6379/1
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - edunerve-network
+
+  # Content Service
+  content-service:
+    build: ./services/content-quiz-service
+    ports:
+      - "8002:8002"
+    environment:
+      - DATABASE_URL=postgresql://edunerve:edunerve2024@postgres:5432/edunerve
+      - REDIS_URL=redis://redis:6379/2
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - edunerve-network
+
+  # Assistant Service
+  assistant-service:
+    build: ./services/assistant-service
+    ports:
+      - "8003:8003"
+    environment:
+      - DATABASE_URL=postgresql://edunerve:edunerve2024@postgres:5432/edunerve
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - REDIS_URL=redis://redis:6379/3
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - edunerve-network
+
+  # Admin Service
+  admin-service:
+    build: ./services/admin-service
+    ports:
+      - "8004:8004"
+    environment:
+      - DATABASE_URL=postgresql://edunerve:edunerve2024@postgres:5432/edunerve
+      - REDIS_URL=redis://redis:6379/4
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - edunerve-network
+
+  # Sync Service
+  sync-service:
+    build: ./services/sync-messaging-service
+    ports:
+      - "8005:8005"
+    environment:
+      - DATABASE_URL=postgresql://edunerve:edunerve2024@postgres:5432/edunerve
+      - REDIS_URL=redis://redis:6379/5
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - edunerve-network
+
+  # File Service
+  file-service:
+    build: ./services/file-storage-service
+    ports:
+      - "8006:8006"
+    environment:
+      - DATABASE_URL=postgresql://edunerve:edunerve2024@postgres:5432/edunerve
+      - REDIS_URL=redis://redis:6379/6
+      - UPLOAD_DIR=/app/uploads
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - file_uploads:/app/uploads
+    networks:
+      - edunerve-network
+
+  # Notification Service
+  notification-service:
+    build: ./services/notification-service
+    ports:
+      - "8007:8007"
+    environment:
+      - DATABASE_URL=postgresql://edunerve:edunerve2024@postgres:5432/edunerve
+      - REDIS_URL=redis://redis:6379/7
+      - WHATSAPP_API_KEY=${WHATSAPP_API_KEY}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - edunerve-network
+
+  # Frontend
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:8000
+    depends_on:
+      - api-gateway
+    networks:
+      - edunerve-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  file_uploads:
+
+networks:
+  edunerve-network:
+    driver: bridge

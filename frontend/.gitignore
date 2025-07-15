@@ -1,0 +1,23 @@
+# Node
+node_modules/
+.next/
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Build
+out/
+dist/
+
+# Test
+coverage/
+.nyc_output/
+
+# Vercel
+.vercel/
