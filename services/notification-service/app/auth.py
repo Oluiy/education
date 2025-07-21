@@ -9,6 +9,11 @@ from typing import Optional, Dict, Any
 import httpx
 import os
 from dotenv import load_dotenv
+# Import security modules
+from app.security_config import get_jwt_config, SecurityConfig
+from app.input_validation import InputValidator
+from app.error_handling import SecurityError, ErrorResponseHandler
+
 
 load_dotenv()
 

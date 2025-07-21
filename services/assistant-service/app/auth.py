@@ -9,6 +9,11 @@ from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from dotenv import load_dotenv
+# Import security modules
+from app.security_config import get_jwt_config, SecurityConfig
+from app.input_validation import InputValidator
+from app.error_handling import SecurityError, ErrorResponseHandler
+
 import logging
 
 # Load environment variables

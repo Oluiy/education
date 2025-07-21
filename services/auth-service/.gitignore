@@ -1,25 +1,158 @@
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+# ==============================================================================
+# Python/FastAPI Service - .gitignore
+# Service-specific ignores for microservices
+# ==============================================================================
 
-# Environments
+# ==========================
+# Python
+# ==========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ==========================
+# Virtual Environments
+# ==========================
 .env
 .venv/
 venv/
+ENV/
+env/
+.env/
+.virtualenv/
 
-# OS
+# ==========================
+# FastAPI Specific
+# ==========================
+# Auto-generated OpenAPI docs
+openapi.json
+docs/
+redoc/
+
+# Uploaded files
+uploads/
+static/uploads/
+media/
+
+# ==========================
+# Database
+# ==========================
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+app.db
+test.db
+local.db
+
+# ==========================
+# Logs
+# ==========================
+*.log
+logs/
+*.log.*
+app.log
+uvicorn.log
+gunicorn.log
+celery.log
+
+# ==========================
+# Testing
+# ==========================
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+tests/__pycache__/
+test-results/
+
+# ==========================
+# Security
+# ==========================
+# Environment files
+.env.local
+.env.production
+.env.staging
+.env.development
+.env.test
+*.env
+!.env.example
+
+# Secrets and keys
+*.pem
+*.key
+*.crt
+*.cert
+secrets/
+private/
+
+# ==========================
+# Development
+# ==========================
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
+# ==========================
+# Temporary Files
+# ==========================
+*.tmp
+*.temp
+*.bak
+*.backup
+temp/
+tmp/
 
-# Test
-.coverage
-htmlcov/
+# ==========================
+# Service Specific
+# ==========================
+# Alembic (if using database migrations)
+alembic.ini.local
+versions/__pycache__/
 
-# Docker
-*.db
-*.sqlite3
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Redis dumps
+dump.rdb
+
+# Performance monitoring
+.newrelic.yml
+
+# API documentation
+swagger.json
+openapi.yaml

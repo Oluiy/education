@@ -1,12 +1,14 @@
 """
-EduNerve Content & Quiz Service - Main FastAPI Application
-Content management and AI-powered quiz generation system
+EduNerve Content & Quiz Service - Enhanced Main FastAPI Application
+Content management and AI-powered quiz generation system with comprehensive security
 """
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from contextlib import asynccontextmanager
 import uvicorn
 import os
@@ -17,28 +19,47 @@ from app.database import create_tables
 from app.routes import router
 from app.schemas import ErrorResponse
 
+# Import security modules
+from app.cors_config import apply_secure_cors
+from app.error_handling import (
+    SecureErrorHandler, 
+    ErrorResponseHandler, 
+    SecurityError
+)
+from app.security_config import SecurityConfig, get_security_headers
+
 # Load environment variables
 load_dotenv()
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure enhanced logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan manager"""
+    """Enhanced application lifespan manager with security initialization"""
     # Startup
-    logger.info("🚀 Starting EduNerve Content & Quiz Service...")
+    logger.info("🚀 Starting EduNerve Content & Quiz Service with enhanced security...")
+    
+    # Initialize security configuration
+    security_config = SecurityConfig()
+    logger.info("✅ Security configuration initialized")
     
     # Create database tables
     create_tables()
     logger.info("✅ Database tables created successfully")
     
-    # Create upload directory
+    # Create upload directory with secure permissions
     upload_dir = "uploads"
     os.makedirs(upload_dir, exist_ok=True)
-    logger.info(f"✅ Upload directory created: {upload_dir}")
+    # Set secure permissions (readable/writable by owner only)
+    if hasattr(os, 'chmod'):
+        os.chmod(upload_dir, 0o700)
+    logger.info(f"✅ Secure upload directory created: {upload_dir}")
     
     # Check OpenAI API key
     if not os.getenv("OPENAI_API_KEY"):
@@ -46,7 +67,7 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("✅ OpenAI API key configured")
     
-    # Check auth service connection
+    # Enhanced auth service connection check
     try:
         from app.auth import check_auth_service_health
         auth_healthy = await check_auth_service_health()

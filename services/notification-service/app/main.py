@@ -18,10 +18,20 @@ from . import models, schemas
 from .database import engine, get_db
 from .auth import verify_token, get_current_user
 from .notification_service import NotificationService
+from .security_config import SecurityConfig
+from .cors_config import apply_secure_cors
+from .error_handling import SecureErrorHandler
 import uvicorn
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Enhanced logging configuration
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('notification_service.log')
+    ]
+)
 logger = logging.getLogger(__name__)
 
 # Global variables for background tasks
@@ -61,14 +71,15 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Initialize security configuration
+security_config = SecurityConfig()
+
+# Apply secure CORS configuration
+apply_secure_cors(app)
+
+# Add secure error handlers
+error_handler = SecureErrorHandler()
+error_handler.add_handlers(app)
 
 # Security
 security = HTTPBearer()

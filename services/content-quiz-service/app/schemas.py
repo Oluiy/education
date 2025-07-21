@@ -8,6 +8,32 @@ from datetime import datetime
 from enum import Enum
 
 
+# Authentication Schemas
+class TokenData(BaseModel):
+    """Enhanced schema for token data with security validations"""
+    email: Optional[str] = None
+    user_id: Optional[int] = None
+    school_id: Optional[int] = None
+    role: Optional[str] = None
+    iat: Optional[int] = None  # Issued at timestamp
+    exp: Optional[int] = None  # Expiration timestamp
+    jti: Optional[str] = None  # JWT ID for blacklisting
+    
+    class Config:
+        from_attributes = True
+        
+    def is_expired(self) -> bool:
+        """Check if token is expired"""
+        if not self.exp:
+            return False
+        from datetime import datetime
+        return datetime.utcnow().timestamp() > self.exp
+    
+    def is_valid_for_school(self, school_id: int) -> bool:
+        """Check if token is valid for specific school"""
+        return self.school_id == school_id
+
+
 class ContentType(str, Enum):
     """Content types enum"""
     PDF = "pdf"

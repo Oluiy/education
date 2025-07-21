@@ -13,6 +13,11 @@ import httpx
 import logging
 from datetime import datetime
 from dotenv import load_dotenv
+# Import security modules
+from app.security_config import get_jwt_config, SecurityConfig
+from app.input_validation import InputValidator
+from app.error_handling import SecurityError, ErrorResponseHandler
+
 
 # Load environment variables
 load_dotenv()

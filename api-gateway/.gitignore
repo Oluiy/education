@@ -1,25 +1,76 @@
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+# ==============================================================================
+# API Gateway/Node.js - .gitignore
+# ==============================================================================
 
-# Environments
+# ==========================
+# Dependencies
+# ==========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==========================
+# Environment
+# ==========================
 .env
-.venv/
-venv/
+.env.local
+.env.production
+.env.staging
+.env.development
+.env.test
 
+# ==========================
+# Logs
+# ==========================
+*.log
+logs/
+*.log.*
+
+# ==========================
+# Runtime data
+# ==========================
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ==========================
+# Coverage
+# ==========================
+coverage/
+.nyc_output
+*.lcov
+
+# ==========================
+# Build outputs
+# ==========================
+dist/
+build/
+
+# ==========================
+# Cache
+# ==========================
+.npm
+.eslintcache
+.cache
+
+# ==========================
+# IDE
+# ==========================
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+
+# ==========================
 # OS
+# ==========================
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
-
-# Test
-.coverage
-htmlcov/
-
-# Docker
-*.db
-*.sqlite3
+# ==========================
+# Temporary files
+# ==========================
+*.tmp
+*.temp
+*~

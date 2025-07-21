@@ -16,6 +16,14 @@ import os
 import logging
 from datetime import datetime
 from dotenv import load_dotenv
+# Import security modules
+from app.cors_config import apply_secure_cors
+from app.error_handling import (
+    SecureErrorHandler, 
+    ErrorResponseHandler, 
+    SecurityError
+)
+from app.security_config import SecurityConfig, get_security_headers
 
 # Load environment variables
 load_dotenv()

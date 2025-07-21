@@ -1,6 +1,6 @@
 """
-EduNerve Content & Quiz Service - Authentication & Authorization
-JWT token verification and user management
+EduNerve Content & Quiz Service - Enhanced Authentication & Authorization
+JWT token verification and user management with enhanced security
 """
 
 import os
@@ -13,6 +13,12 @@ import logging
 import jwt
 import time
 
+# Import security modules
+from app.security_config import get_jwt_config, SecurityConfig
+from app.input_validation import InputValidator
+from app.error_handling import SecurityError, ErrorResponseHandler
+from app.schemas import TokenData
+
 # Load environment variables
 load_dotenv()
 
@@ -20,25 +26,29 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Enhanced security configuration
+security_config = SecurityConfig()
+jwt_config = get_jwt_config()
+
 # Authentication configuration
 AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://localhost:8000/api/v1/auth")
 security = HTTPBearer()
 
-# JWT Configuration
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+# Enhanced JWT Configuration
+SECRET_KEY = jwt_config["secret_key"]
+ALGORITHM = jwt_config["algorithm"]
+ACCESS_TOKEN_EXPIRE_MINUTES = jwt_config["access_token_expire_minutes"]
 
-# Exceptions
+# Enhanced exceptions with security logging
 credentials_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Could not validate credentials",
+    detail="Authentication required",
     headers={"WWW-Authenticate": "Bearer"},
 )
 
 permission_exception = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,
-    detail="Not enough permissions",
+    detail="Access denied",
 )
 
 

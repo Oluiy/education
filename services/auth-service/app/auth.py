@@ -20,10 +20,14 @@ from app.schemas import TokenData
 # Load environment variables
 load_dotenv()
 
-# Security configurations
-SECRET_KEY = os.getenv("SECRET_KEY", "your-fallback-secret-key-change-this")
-ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
+# Import security configuration
+from app.security_config import get_jwt_config, security_config
+
+# Security configurations from secure config
+jwt_config = get_jwt_config()
+SECRET_KEY = jwt_config["secret_key"]
+ALGORITHM = jwt_config["algorithm"]
+ACCESS_TOKEN_EXPIRE_MINUTES = jwt_config["access_token_expire_minutes"]
 
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -46,16 +50,16 @@ permission_exception = HTTPException(
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
-    Verify a plain password against a hashed password
+    Verify a plain password against a hashed password using secure comparison
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    return security_config.verify_password(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
     """
-    Hash a password using bcrypt
+    Hash a password using secure PBKDF2 with salt
     """
-    return pwd_context.hash(password)
+    return security_config.hash_password(password)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
