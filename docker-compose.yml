@@ -55,6 +55,9 @@ services:
       - sync-messaging-service
       - file-storage-service
       - notification-service
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     networks:
       - edunerve-network
 
