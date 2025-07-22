@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   # Database
-  postgres:
+  db:
     image: postgres:15
     environment:
       POSTGRES_USER: edunerve
@@ -13,6 +11,9 @@ services:
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     ports:
       - "5432:5432"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     networks:
       - edunerve-network
 
@@ -23,6 +24,9 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     networks:
       - edunerve-network
 
@@ -33,23 +37,23 @@ services:
       - "8000:8000"
     environment:
       - REDIS_URL=redis://redis:6379/0
-      - DATABASE_URL=postgresql://edunerve:edunerve2024@postgres:5432/edunerve
+      - DATABASE_URL=postgresql://edunerve:edunerve2024@db:5432/edunerve
       - AUTH_SERVICE_URL=http://auth-service:8001
       - CONTENT_SERVICE_URL=http://content-quiz-service:8002
-      - FILE_STORAGE_SERVICE_URL=http://file-storage-service:8003
-      - SYNC_MESSAGING_SERVICE_URL=http://sync-messaging-service:8004
-      - ASSISTANT_SERVICE_URL=http://assistant-service:8005
-      - ADMIN_SERVICE_URL=http://admin-service:8006
+      - ASSISTANT_SERVICE_URL=http://assistant-service:8003
+      - ADMIN_SERVICE_URL=http://admin-service:8004
+      - SYNC_SERVICE_URL=http://sync-messaging-service:8005
+      - FILE_SERVICE_URL=http://file-storage-service:8006
       - NOTIFICATION_SERVICE_URL=http://notification-service:8007
     depends_on:
-      - postgres
+      - db
       - redis
       - auth-service
       - content-quiz-service
-      - file-storage-service
-      - sync-messaging-service
       - assistant-service
       - admin-service
+      - sync-messaging-service
+      - file-storage-service
       - notification-service
     networks:
       - edunerve-network
@@ -60,25 +64,25 @@ services:
     ports:
       - "8001:8001"
     environment:
-      - DATABASE_URL=postgresql://edunerve:edunerve2024@postgres:5432/edunerve
+      - DATABASE_URL=postgresql://edunerve:edunerve2024@db:5432/edunerve
       - JWT_SECRET=your-super-secret-jwt-key-change-in-production
       - REDIS_URL=redis://redis:6379/1
     depends_on:
-      - postgres
+      - db
       - redis
     networks:
       - edunerve-network
 
-  # Content Service
-  content-service:
+  # Content Quiz Service
+  content-quiz-service:
     build: ./services/content-quiz-service
     ports:
       - "8002:8002"
     environment:
-      - DATABASE_URL=postgresql://edunerve:edunerve2024@postgres:5432/edunerve
+      - DATABASE_URL=postgresql://edunerve:edunerve2024@db:5432/edunerve
       - REDIS_URL=redis://redis:6379/2
     depends_on:
-      - postgres
+      - db
       - redis
     networks:
       - edunerve-network
@@ -89,11 +93,11 @@ services:
     ports:
       - "8003:8003"
     environment:
-      - DATABASE_URL=postgresql://edunerve:edunerve2024@postgres:5432/edunerve
+      - DATABASE_URL=postgresql://edunerve:edunerve2024@db:5432/edunerve
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - REDIS_URL=redis://redis:6379/3
     depends_on:
-      - postgres
+      - db
       - redis
     networks:
       - edunerve-network
@@ -104,39 +108,39 @@ services:
     ports:
       - "8004:8004"
     environment:
-      - DATABASE_URL=postgresql://edunerve:edunerve2024@postgres:5432/edunerve
+      - DATABASE_URL=postgresql://edunerve:edunerve2024@db:5432/edunerve
       - REDIS_URL=redis://redis:6379/4
     depends_on:
-      - postgres
+      - db
       - redis
     networks:
       - edunerve-network
 
-  # Sync Service
-  sync-service:
+  # Sync Messaging Service
+  sync-messaging-service:
     build: ./services/sync-messaging-service
     ports:
       - "8005:8005"
     environment:
-      - DATABASE_URL=postgresql://edunerve:edunerve2024@postgres:5432/edunerve
+      - DATABASE_URL=postgresql://edunerve:edunerve2024@db:5432/edunerve
       - REDIS_URL=redis://redis:6379/5
     depends_on:
-      - postgres
+      - db
       - redis
     networks:
       - edunerve-network
 
-  # File Service
-  file-service:
+  # File Storage Service
+  file-storage-service:
     build: ./services/file-storage-service
     ports:
       - "8006:8006"
     environment:
-      - DATABASE_URL=postgresql://edunerve:edunerve2024@postgres:5432/edunerve
+      - DATABASE_URL=postgresql://edunerve:edunerve2024@db:5432/edunerve
       - REDIS_URL=redis://redis:6379/6
       - UPLOAD_DIR=/app/uploads
     depends_on:
-      - postgres
+      - db
       - redis
     volumes:
       - file_uploads:/app/uploads
@@ -149,26 +153,14 @@ services:
     ports:
       - "8007:8007"
     environment:
-      - DATABASE_URL=postgresql://edunerve:edunerve2024@postgres:5432/edunerve
+      - DATABASE_URL=postgresql://edunerve:edunerve2024@db:5432/edunerve
       - REDIS_URL=redis://redis:6379/7
       - WHATSAPP_API_KEY=${WHATSAPP_API_KEY}
       - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
       - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
     depends_on:
-      - postgres
+      - db
       - redis
-    networks:
-      - edunerve-network
-
-  # Frontend
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:8000
-    depends_on:
-      - api-gateway
     networks:
       - edunerve-network
 
@@ -180,3 +172,9 @@ volumes:
 networks:
   edunerve-network:
     driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: edunerve-bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
