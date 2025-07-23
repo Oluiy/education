@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import DashboardLayout from '@/components/layout/DashboardLayout'
 import {
   ClockIcon,
   CheckCircleIcon,
@@ -184,31 +183,35 @@ export default function TakeQuizPage({ params }: { params: { id: string } }) {
 
   if (loading) {
     return (
-      <DashboardLayout userType="student">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          </div>
         </div>
-      </DashboardLayout>
+      </div>
     )
   }
 
   const currentQuestionData = questions[currentQuestion]
 
   return (
-    <DashboardLayout userType="student">
-      <div className="p-6 max-w-4xl mx-auto">
-        {/* Quiz Header */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{quiz.title}</h1>
-              <p className="text-gray-600">Question {currentQuestion + 1} of {questions.length}</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-sm">
-                <ClockIcon className="w-4 h-4 text-gray-500" />
-                <span className={`font-medium ${timeLeft < 300 ? 'text-red-600' : 'text-gray-900'}`}>
-                  {formatTime(timeLeft)}
+    <div className="min-h-screen bg-gray-50">
+      {/* Main Content - Centralized */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Quiz Header */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">{quiz.title}</h1>
+                <p className="text-gray-600">Question {currentQuestion + 1} of {questions.length}</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-sm">
+                  <ClockIcon className="w-4 h-4 text-gray-500" />
+                  <span className={`font-medium ${timeLeft < 300 ? 'text-red-600' : 'text-gray-900'}`}>
+                    {formatTime(timeLeft)}
                 </span>
               </div>
               <div className="text-sm text-gray-600">
@@ -374,7 +377,8 @@ export default function TakeQuizPage({ params }: { params: { id: string } }) {
             </button>
           )}
         </div>
+        </div>
       </div>
-    </DashboardLayout>
+    </div>
   )
 }

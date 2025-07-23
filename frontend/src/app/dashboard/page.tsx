@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useDashboardStats, useRecentActivity } from '@/lib/hooks'
 import {
   BookOpenIcon,
@@ -200,55 +199,49 @@ export default function DashboardPage() {
   // Show loading state
   if (statsLoading && activityLoading) {
     return (
-      <DashboardLayout userType="student">
-        <div className="w-full min-h-full">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="animate-pulse">
-              <div className="h-32 bg-gray-200 rounded-2xl mb-6"></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-24 bg-gray-200 rounded-xl"></div>
-                ))}
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 h-96 bg-gray-200 rounded-xl"></div>
-                <div className="h-96 bg-gray-200 rounded-xl"></div>
-              </div>
-            </div>
+      <div className="w-full min-h-full">
+        <div className="animate-pulse space-y-6">
+          <div className="h-32 bg-gray-200 rounded-2xl"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-24 bg-gray-200 rounded-xl"></div>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 h-96 bg-gray-200 rounded-xl"></div>
+            <div className="h-96 bg-gray-200 rounded-xl"></div>
           </div>
         </div>
-      </DashboardLayout>
+      </div>
     )
   }
 
   return (
-    <DashboardLayout userType="student">
-      <div className="w-full min-h-full">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-          {/* API Error Banner */}
-          {statsError && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-            className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center space-x-3"
-          >
-            <ExclamationCircleIcon className="w-5 h-5 text-yellow-600" />
-            <div>
-              <p className="text-sm font-medium text-yellow-800">
-                API Connection Issue
-              </p>
-              <p className="text-xs text-yellow-600">
-                Showing demo data. Check your backend services.
-              </p>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Welcome header */}
+    <div className="space-y-6">
+      {/* API Error Banner */}
+      {statsError && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-primary-600 to-secondary-600 rounded-2xl p-6 text-white"
+          className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center space-x-3"
+        >
+          <ExclamationCircleIcon className="w-5 h-5 text-yellow-600" />
+          <div>
+            <p className="text-sm font-medium text-yellow-800">
+              API Connection Issue
+            </p>
+            <p className="text-xs text-yellow-600">
+              Showing demo data. Check your backend services.
+            </p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Welcome header */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-r from-primary-600 to-secondary-600 rounded-2xl p-6 text-white"
         >
           <div className="flex items-center justify-between">
             <div>
@@ -371,7 +364,7 @@ export default function DashboardPage() {
               </div>
               <div className="card-body">
                 <div className="space-y-3">
-                  {displayData.upcomingAssignments.slice(0, 3).map((assignment: Assignment) => (
+                  {displayData.upcomingAssignments.slice(0, 5).map((assignment: Assignment) => (
                     <div key={assignment.id} className="p-3 rounded-lg border border-gray-200">
                       <div className="flex items-start justify-between mb-2">
                         <h4 className="font-medium text-gray-900 text-sm">
@@ -390,44 +383,6 @@ export default function DashboardPage() {
                 </div>
                 <button className="btn-secondary btn-sm w-full mt-4">
                   View all assignments
-                </button>
-              </div>
-            </div>
-
-            {/* Recent Notifications */}
-            <div className="card">
-              <div className="card-header">
-                <h3 className="card-title">Recent Notifications</h3>
-              </div>
-              <div className="card-body">
-                <div className="space-y-3">
-                  {displayData.notifications.slice(0, 3).map((notification: Notification) => (
-                    <div key={notification.id} className={`p-3 rounded-lg border ${
-                      !notification.read ? 'border-primary-200 bg-primary-50' : 'border-gray-200'
-                    }`}>
-                      <div className="flex items-start space-x-3">
-                        <div className={`p-1 rounded-full ${
-                          !notification.read ? 'bg-primary-600' : 'bg-gray-400'
-                        }`}>
-                          <BellIcon className="w-3 h-3 text-white" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 text-sm">
-                            {notification.title}
-                          </h4>
-                          <p className="text-xs text-gray-600 mt-1">
-                            {notification.message}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {notification.time}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button className="btn-secondary btn-sm w-full mt-4">
-                  View all notifications
                 </button>
               </div>
             </div>
@@ -471,8 +426,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </motion.div>
-        </div>
-      </div>
-    </DashboardLayout>
+    </div>
   )
 }

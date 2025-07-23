@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import DashboardLayout from '@/components/layout/DashboardLayout'
 import {
   UserIcon,
   KeyIcon,
@@ -43,8 +42,9 @@ export default function SettingsPage() {
   }
 
   return (
-    <DashboardLayout userType="student">
-      <div className="p-6">
+    <div className="min-h-screen bg-gray-50">
+      {/* Main Content - Centralized */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <motion.div
@@ -514,6 +514,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   )
 }

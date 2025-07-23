@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import DashboardLayout from '@/components/layout/DashboardLayout'
 import {
   ArrowLeftIcon,
   PhotoIcon,
@@ -132,22 +131,24 @@ export default function CreateCoursePage() {
   }
 
   return (
-    <DashboardLayout userType="teacher">
-      <div className="p-6 max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <Link href="/dashboard/courses">
-              <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                <ArrowLeftIcon className="w-5 h-5" />
-              </button>
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Create New Course</h1>
-              <p className="text-gray-600 mt-1">Build engaging content for your students</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Main Content - Centralized */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-4 mb-4">
+              <Link href="/dashboard/courses">
+                <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                  <ArrowLeftIcon className="w-5 h-5" />
+                </button>
+              </Link>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Create New Course</h1>
+                <p className="text-gray-600 mt-1">Build engaging content for your students</p>
+              </div>
             </div>
           </div>
-        </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Basic Information */}
@@ -470,7 +471,8 @@ export default function CreateCoursePage() {
             </Link>
           </motion.div>
         </form>
+        </div>
       </div>
-    </DashboardLayout>
+    </div>
   )
 }

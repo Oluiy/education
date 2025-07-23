@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import DashboardLayout from '@/components/layout/DashboardLayout'
 import {
   ClipboardDocumentListIcon,
   PlusIcon,
@@ -136,17 +135,20 @@ export default function QuizzesPage() {
 
   if (loading) {
     return (
-      <DashboardLayout userType="teacher">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          </div>
         </div>
-      </DashboardLayout>
+      </div>
     )
   }
 
   return (
-    <DashboardLayout userType="teacher">
-      <div className="p-6 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      {/* Main Content - Centralized */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -297,6 +299,6 @@ export default function QuizzesPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+    </div>
   )
 }

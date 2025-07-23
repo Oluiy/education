@@ -2,52 +2,71 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import DashboardLayout from '@/components/layout/DashboardLayout'
 import {
   DocumentTextIcon,
   CalendarIcon,
   ClockIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
-  ArrowUpIcon,
   FunnelIcon,
   MagnifyingGlassIcon,
   BookOpenIcon,
-  UserIcon
+  UserIcon,
+  PaperClipIcon,
+  ArrowUpIcon
 } from '@heroicons/react/24/outline'
 
+interface Assignment {
+  id: number
+  title: string
+  course: string
+  instructor: string
+  description: string
+  dueDate: string
+  submittedDate: string | null
+  status: string
+  priority: string
+  points: number
+  estimatedTime: string
+  type: string
+  attachments: string[]
+  instructions?: string
+  grade?: number
+  feedback?: string
+}
+
 // Mock assignment data
-const mockAssignments = [
+const mockAssignments: Assignment[] = [
   {
     id: 1,
-    title: 'Calculus Problem Set #3',
+    title: 'Chemistry Lab Safety Quiz',
+    course: 'Chemistry Lab',
+    instructor: 'Dr. Wilson',
+    description: 'Safety protocol quiz - must score 100% to access lab equipment.',
+    dueDate: '2024-03-20',
+    submittedDate: null,
+    status: 'overdue',
+    priority: 'high',
+    points: 10,
+    estimatedTime: '20 minutes',
+    type: 'quiz',
+    attachments: ['safety_manual.pdf'],
+    instructions: 'Must achieve 100% to pass. Unlimited attempts allowed.'
+  },
+  {
+    id: 2,
+    title: 'Calculus Problem Set #5',
     course: 'Advanced Mathematics',
-    instructor: 'Mr. Johnson',
-    description: 'Solve differential equations and integration problems. Submit your work showing all steps.',
-    dueDate: '2024-03-25',
+    instructor: 'Mr. Johnson', 
+    description: 'Solve differential equations and integration problems.',
+    dueDate: '2024-01-18',
     submittedDate: null,
     status: 'pending',
     priority: 'high',
     points: 25,
     estimatedTime: '2 hours',
     type: 'homework',
-    attachments: ['problem_set_3.pdf'],
-    instructions: 'Complete all 10 problems. Show your work clearly. You may use a calculator but must show all steps.'
-  },
-  {
-    id: 2,
-    title: 'Physics Lab Report',
-    course: 'Physics Fundamentals',
-    instructor: 'Dr. Smith',
-    description: 'Write a comprehensive report on the pendulum experiment conducted in class.',
-    dueDate: '2024-03-28',
-    submittedDate: null,
-    status: 'pending',
-    priority: 'medium',
-    points: 40,
-    estimatedTime: '3 hours',
-    type: 'lab',
-    attachments: ['lab_template.docx', 'experiment_data.xlsx'],
+    attachments: [],
     instructions: 'Follow the lab report template. Include introduction, methodology, results, and conclusion.'
   },
   {
@@ -83,22 +102,6 @@ const mockAssignments = [
     instructions: 'Complete within 45 minutes. One attempt only.',
     grade: 14,
     feedback: 'Excellent work! Minor error on question 7.'
-  },
-  {
-    id: 5,
-    title: 'Chemistry Lab Safety Quiz',
-    course: 'Chemistry Lab',
-    instructor: 'Dr. Wilson',
-    description: 'Safety protocol quiz - must score 100% to access lab equipment.',
-    dueDate: '2024-03-20',
-    submittedDate: null,
-    status: 'overdue',
-    priority: 'high',
-    points: 10,
-    estimatedTime: '20 minutes',
-    type: 'quiz',
-    attachments: ['safety_manual.pdf'],
-    instructions: 'Must achieve 100% to pass. Unlimited attempts allowed.'
   }
 ]
 
@@ -172,10 +175,12 @@ export default function AssignmentsPage() {
   }
 
   return (
-    <DashboardLayout userType="student">
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <motion.div
+    <div className="min-h-screen bg-gray-50">
+      {/* Main Content - Centralized */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-6">
+          {/* Header */}
+          <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col lg:flex-row lg:items-center lg:justify-between"
@@ -430,7 +435,8 @@ export default function AssignmentsPage() {
             </p>
           </motion.div>
         )}
+        </div>
       </div>
-    </DashboardLayout>
+    </div>
   )
 }

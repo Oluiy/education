@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import DashboardLayout from '@/components/layout/DashboardLayout'
 import {
   BookOpenIcon,
   ClockIcon,
@@ -142,10 +141,12 @@ export default function CoursesPage() {
   }
 
   return (
-    <DashboardLayout userType="student">
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <motion.div
+    <div className="min-h-screen bg-gray-50">
+      {/* Main Content - Centralized */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-6">
+          {/* Header */}
+          <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col lg:flex-row lg:items-center lg:justify-between"
@@ -358,7 +359,8 @@ export default function CoursesPage() {
             )}
           </motion.div>
         )}
+        </div>
       </div>
-    </DashboardLayout>
+    </div>
   )
 }
