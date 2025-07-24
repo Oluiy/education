@@ -10,7 +10,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 import logging
-import jwt
+import jwt  # PyJWT
 import time
 
 # Import security modules

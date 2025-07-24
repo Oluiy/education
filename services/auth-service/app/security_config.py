@@ -116,3 +116,15 @@ def get_encryption_key() -> bytes:
 def generate_secure_token(length: int = 32) -> str:
     """Generate cryptographically secure token"""
     return secrets.token_urlsafe(length)
+
+def get_security_headers() -> Dict[str, str]:
+    """Get security headers for HTTP responses"""
+    return {
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "X-XSS-Protection": "1; mode=block",
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+        "Content-Security-Policy": "default-src 'self'",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
+    }

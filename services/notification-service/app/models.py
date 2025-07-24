@@ -86,8 +86,8 @@ class Notification(Base):
     retry_count = Column(Integer, default=0)
     last_retry = Column(DateTime, nullable=True)
     
-    # Metadata
-    metadata = Column(JSON, default=dict)
+    # Notification metadata
+    notification_metadata = Column(JSON, default=dict)
     attachments = Column(JSON, nullable=True)
     
     # Timestamps
@@ -272,8 +272,8 @@ class NotificationQueue(Base):
     max_retries = Column(Integer, default=3)
     next_retry = Column(DateTime, nullable=True)
     
-    # Metadata
-    metadata = Column(JSON, default=dict)
+    # Queue metadata
+    queue_metadata = Column(JSON, default=dict)
     
     # Indexes
     __table_args__ = (

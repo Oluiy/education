@@ -56,7 +56,7 @@ class SyncRecord(Base):
     
     # Data
     data = Column(JSON, nullable=False)
-    metadata = Column(JSON, default=dict)
+    sync_metadata = Column(JSON, default=dict)
     
     # Status and timing
     status = Column(String, default=SyncStatus.PENDING)

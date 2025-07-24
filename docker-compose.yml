@@ -11,6 +11,11 @@ services:
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U edunerve -d edunerve"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     dns:
       - 8.8.8.8
       - 8.8.4.4
@@ -24,6 +29,11 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     dns:
       - 8.8.8.8
       - 8.8.4.4
@@ -46,15 +56,24 @@ services:
       - FILE_SERVICE_URL=http://file-storage-service:8006
       - NOTIFICATION_SERVICE_URL=http://notification-service:8007
     depends_on:
-      - db
-      - redis
-      - auth-service
-      - content-quiz-service
-      - assistant-service
-      - admin-service
-      - sync-messaging-service
-      - file-storage-service
-      - notification-service
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      content-quiz-service:
+        condition: service_started
+      assistant-service:
+        condition: service_started
+      admin-service:
+        condition: service_started
+      sync-messaging-service:
+        condition: service_started
+      file-storage-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
     dns:
       - 8.8.8.8
       - 8.8.4.4
@@ -71,10 +90,13 @@ services:
       - JWT_SECRET=your-super-secret-jwt-key-change-in-production
       - REDIS_URL=redis://redis:6379/1
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - edunerve-network
+    restart: unless-stopped
 
   # Content Quiz Service
   content-quiz-service:
@@ -85,10 +107,13 @@ services:
       - DATABASE_URL=postgresql://edunerve:edunerve2024@db:5432/edunerve
       - REDIS_URL=redis://redis:6379/2
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - edunerve-network
+    restart: unless-stopped
 
   # Assistant Service
   assistant-service:
@@ -100,10 +125,13 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - REDIS_URL=redis://redis:6379/3
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - edunerve-network
+    restart: unless-stopped
 
   # Admin Service
   admin-service:
@@ -114,10 +142,13 @@ services:
       - DATABASE_URL=postgresql://edunerve:edunerve2024@db:5432/edunerve
       - REDIS_URL=redis://redis:6379/4
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - edunerve-network
+    restart: unless-stopped
 
   # Sync Messaging Service
   sync-messaging-service:
@@ -128,10 +159,13 @@ services:
       - DATABASE_URL=postgresql://edunerve:edunerve2024@db:5432/edunerve
       - REDIS_URL=redis://redis:6379/5
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - edunerve-network
+    restart: unless-stopped
 
   # File Storage Service
   file-storage-service:
@@ -143,12 +177,15 @@ services:
       - REDIS_URL=redis://redis:6379/6
       - UPLOAD_DIR=/app/uploads
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - file_uploads:/app/uploads
     networks:
       - edunerve-network
+    restart: unless-stopped
 
   # Notification Service
   notification-service:
@@ -162,10 +199,13 @@ services:
       - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
       - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - edunerve-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:

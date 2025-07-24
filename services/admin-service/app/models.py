@@ -145,7 +145,7 @@ class AuditLog(Base):
     # Data
     old_values = Column(JSON)
     new_values = Column(JSON)
-    metadata = Column(JSON)
+    audit_metadata = Column(JSON)
     
     # Status
     success = Column(Boolean, default=True)

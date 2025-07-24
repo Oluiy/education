@@ -72,8 +72,8 @@ class File(Base):
     virus_scanned = Column(Boolean, default=False)
     scan_result = Column(String, nullable=True)
     
-    # Metadata extracted from file
-    metadata = Column(JSON, default=dict)  # EXIF, dimensions, duration, etc.
+    # File metadata extracted from file
+    file_metadata = Column(JSON, default=dict)  # EXIF, dimensions, duration, etc.
     extracted_text = Column(Text, nullable=True)  # OCR results
     
     # Usage tracking
