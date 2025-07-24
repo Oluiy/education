@@ -41,7 +41,7 @@ class Notification(Base):
     sent_at = Column(DateTime)
     delivered_at = Column(DateTime)
     expires_at = Column(DateTime)
-    metadata = Column(JSON)
+    notification_metadata = Column(JSON)  # Renamed from metadata to avoid SQLAlchemy reserved name
     attachments = Column(JSON)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

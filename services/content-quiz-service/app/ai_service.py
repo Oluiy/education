@@ -19,9 +19,15 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+# OpenAI client - conditional initialization
+openai_api_key = os.getenv("OPENAI_API_KEY")
+if openai_api_key:
+    client = OpenAI(api_key=openai_api_key)
+    DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+else:
+    client = None
+    DEFAULT_MODEL = None
+    logger.warning("OpenAI API key not provided. AI features will be disabled.")
 
 
 class AIQuizGenerator:
@@ -47,6 +53,10 @@ class AIQuizGenerator:
         Returns:
             tuple: (questions_list, generation_prompt)
         """
+        if not self.client:
+            logger.error("OpenAI client not available. Cannot generate quiz.")
+            return [], "OpenAI API key not configured"
+            
         try:
             # Create the prompt
             prompt = self._create_quiz_prompt(
@@ -391,6 +401,13 @@ ai_grader = AIGrader()
 # Utility functions
 def extract_keywords_from_text(text: str) -> List[str]:
     """Extract keywords from content text using AI"""
+    if not client:
+        logger.warning("OpenAI client not available. Returning basic keyword extraction.")
+        # Basic fallback keyword extraction
+        import re
+        words = re.findall(r'\b[A-Z][a-z]+\b', text)
+        return list(set(words))[:10]
+        
     try:
         prompt = f"""
 Extract 5-10 key educational terms and concepts from this text:
@@ -433,6 +450,10 @@ Focus on:
 
 def summarize_content(text: str, max_length: int = 500) -> str:
     """Summarize content text using AI"""
+    if not client:
+        logger.warning("OpenAI client not available. Returning truncated text.")
+        return text[:max_length] + "..." if len(text) > max_length else text
+        
     try:
         prompt = f"""
 Summarize this educational content in {max_length} characters or less:

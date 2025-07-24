@@ -3,7 +3,7 @@ EduNerve Sync & Messaging Service - Database Configuration
 SQLAlchemy setup with support for both SQLite and PostgreSQL
 """
 
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine, MetaData, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 import os
@@ -113,7 +113,7 @@ class DatabaseManager:
         """Check database connection"""
         try:
             with engine.connect() as connection:
-                connection.execute("SELECT 1")
+                connection.execute(text("SELECT 1"))
             return True
         except Exception as e:
             logger.error(f"Database connection failed: {str(e)}")

@@ -52,6 +52,21 @@ class ResourceGenerationRequest(BaseModel):
         return v
 
 
+class StudyResourceCreate(BaseModel):
+    """Schema for creating study resources"""
+    resource_type: str = Field(..., description="Type of resource (video, audio, quiz, text, practice)")
+    resource_title: str = Field(..., description="Title of the resource")
+    resource_description: Optional[str] = Field(None, description="Description of the resource")
+    resource_url: str = Field(..., description="URL or path to the resource")
+    subject: str = Field(..., description="Subject area")
+    class_level: str = Field(..., description="Class level (e.g., SS1, SS2, SS3)")
+    topic: Optional[str] = Field(None, description="Specific topic")
+    keywords: Optional[List[str]] = Field(default_factory=list, description="Related keywords")
+    difficulty_level: Optional[str] = Field("medium", description="Difficulty level")
+    estimated_duration_minutes: Optional[int] = Field(None, description="Estimated duration in minutes")
+    source_type: str = Field("manual", description="How the resource was created")
+
+
 class StudyResourceResponse(BaseModel):
     """Study resource response"""
     id: int
