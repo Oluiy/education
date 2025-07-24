@@ -9,8 +9,12 @@ RUN apt-get update --fix-missing || apt-get update && \
     libpq-dev \
     curl \
     ca-certificates \
+    build-essential \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip to latest version
+RUN pip install --upgrade pip==23.3.1
 
 # Copy requirements first for better caching
 COPY requirements.txt .

@@ -9,6 +9,8 @@ RUN apt-get update --fix-missing || apt-get update && \
     libpq-dev \
     curl \
     ca-certificates \
+    libmagic1 \
+    libmagic-dev \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

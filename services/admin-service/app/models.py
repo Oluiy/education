@@ -1,8 +1,4 @@
-"""
-Admin Service Database Models
-"""
-
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, JSON, ForeignKey, Float, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey, JSON, Enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -12,297 +8,159 @@ Base = declarative_base()
 
 class SystemRole(enum.Enum):
     SUPER_ADMIN = "super_admin"
-    SCHOOL_ADMIN = "school_admin"
-    PRINCIPAL = "principal"
-    VICE_PRINCIPAL = "vice_principal"
-    DEPARTMENT_HEAD = "department_head"
-    COORDINATOR = "coordinator"
+    ADMIN = "admin"
+    MODERATOR = "moderator"
+    SUPPORT = "support"
 
 class AdminUser(Base):
-    """Admin users with extended privileges"""
-    __tablename__ = "admin_users"
+    __tablename__ = 'admin_users'
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    role = Column(Enum(SystemRole), default=SystemRole.ADMIN)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class User(Base):
+    __tablename__ = "users"
+    __table_args__ = {'extend_existing': True}
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, index=True)  # Reference to auth service user
-    school_id = Column(Integer, index=True)
-    
-    # Admin-specific fields
-    system_role = Column(SQLEnum(SystemRole), default=SystemRole.SCHOOL_ADMIN)
-    permissions = Column(JSON)  # Detailed permissions
-    departments = Column(JSON)  # Assigned departments
-    
-    # Profile information
-    employee_id = Column(String, unique=True, index=True)
-    job_title = Column(String)
-    phone = Column(String)
-    emergency_contact = Column(JSON)
-    
-    # Status
+    username = Column(String(50), unique=True, index=True, nullable=False)
+    email = Column(String(100), unique=True, index=True, nullable=False)
+    full_name = Column(String(100), nullable=False)
     is_active = Column(Boolean, default=True)
-    is_verified = Column(Boolean, default=False)
-    last_login = Column(DateTime)
+    is_admin = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class AdminAction(Base):
+    __tablename__ = "admin_actions"
     
-    # Timestamps
+    id = Column(Integer, primary_key=True, index=True)
+    admin_user_id = Column(Integer, ForeignKey("users.id"))
+    action_type = Column(String(50), nullable=False)
+    target_type = Column(String(50))  # user, content, quiz, etc.
+    target_id = Column(Integer)
+    description = Column(Text)
+    details = Column(JSON)
+    ip_address = Column(String(45))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class SystemConfig(Base):
+    __tablename__ = "system_config"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    config_key = Column(String(100), unique=True, nullable=False)
+    config_value = Column(Text)
+    config_type = Column(String(20), default='string')  # string, int, bool, json
+    description = Column(Text)
+    is_active = Column(Boolean, default=True)
+    updated_by = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class UserReport(Base):
+    __tablename__ = "user_reports"
     
-    # Relationships
-    audit_logs = relationship("AuditLog", back_populates="admin_user")
-    reports = relationship("Report", back_populates="created_by_admin")
+    id = Column(Integer, primary_key=True, index=True)
+    reported_user_id = Column(Integer, ForeignKey("users.id"))
+    reporter_user_id = Column(Integer, ForeignKey("users.id"))
+    report_type = Column(String(50), nullable=False)
+    description = Column(Text)
+    status = Column(String(20), default='pending')  # pending, investigating, resolved, dismissed
+    admin_notes = Column(Text)
+    handled_by = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class School(Base):
-    """Extended school information for admin management"""
     __tablename__ = "schools"
     
     id = Column(Integer, primary_key=True, index=True)
-    school_id = Column(Integer, unique=True, index=True)  # Reference to auth service
-    
-    # School details
-    name = Column(String, index=True)
-    code = Column(String, unique=True, index=True)
+    name = Column(String(200), nullable=False)
     address = Column(Text)
-    phone = Column(String)
-    email = Column(String)
-    website = Column(String)
-    
-    # Administrative info
-    principal_name = Column(String)
-    principal_email = Column(String)
-    established_date = Column(DateTime)
-    school_type = Column(String)  # public, private, charter, etc.
-    
-    # Configuration
-    settings = Column(JSON)  # School-specific settings
-    features_enabled = Column(JSON)  # Feature toggles
-    subscription_tier = Column(String, default="basic")
-    
-    # Statistics
-    total_students = Column(Integer, default=0)
-    total_teachers = Column(Integer, default=0)
-    total_classes = Column(Integer, default=0)
-    
-    # Status
+    phone = Column(String(20))
+    email = Column(String(100))
+    website = Column(String(200))
+    principal_id = Column(Integer, ForeignKey("users.id"))
     is_active = Column(Boolean, default=True)
-    is_verified = Column(Boolean, default=False)
-    
-    # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
-    departments = relationship("Department", back_populates="school")
-    reports = relationship("Report", back_populates="school")
 
 class Department(Base):
-    """School departments/subjects"""
     __tablename__ = "departments"
     
     id = Column(Integer, primary_key=True, index=True)
-    school_id = Column(Integer, ForeignKey("schools.id"))
-    
-    name = Column(String, index=True)
-    code = Column(String, index=True)
+    name = Column(String(100), nullable=False)
     description = Column(Text)
-    
-    # Department head
-    head_user_id = Column(Integer)  # Reference to auth service user
-    head_name = Column(String)
-    head_email = Column(String)
-    
-    # Configuration
-    budget = Column(Float)
-    settings = Column(JSON)
-    
-    # Status
+    head_id = Column(Integer, ForeignKey("users.id"))
+    school_id = Column(Integer, ForeignKey("schools.id"))
     is_active = Column(Boolean, default=True)
-    
-    # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
-    school = relationship("School", back_populates="departments")
 
 class AuditLog(Base):
-    """System audit logs"""
     __tablename__ = "audit_logs"
     
     id = Column(Integer, primary_key=True, index=True)
-    school_id = Column(Integer, index=True)
-    admin_user_id = Column(Integer, ForeignKey("admin_users.id"))
-    
-    # Action details
-    action = Column(String, index=True)
-    resource_type = Column(String, index=True)
-    resource_id = Column(String, index=True)
-    
-    # Request details
-    ip_address = Column(String)
-    user_agent = Column(String)
-    request_method = Column(String)
-    request_url = Column(String)
-    
-    # Data
+    user_id = Column(Integer, ForeignKey("users.id"))
+    action = Column(String(100), nullable=False)
+    resource_type = Column(String(50))
+    resource_id = Column(Integer)
     old_values = Column(JSON)
     new_values = Column(JSON)
-    audit_metadata = Column(JSON)
-    
-    # Status
-    success = Column(Boolean, default=True)
-    error_message = Column(Text)
-    
-    # Timestamp
-    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
-    
-    # Relationships
-    admin_user = relationship("AdminUser", back_populates="audit_logs")
+    ip_address = Column(String(45))
+    user_agent = Column(String(500))
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class Report(Base):
-    """Generated reports"""
     __tablename__ = "reports"
     
     id = Column(Integer, primary_key=True, index=True)
-    school_id = Column(Integer, ForeignKey("schools.id"))
-    created_by_admin_id = Column(Integer, ForeignKey("admin_users.id"))
-    
-    # Report details
-    title = Column(String, index=True)
+    title = Column(String(200), nullable=False)
+    report_type = Column(String(50), nullable=False)
     description = Column(Text)
-    report_type = Column(String, index=True)  # student_performance, attendance, etc.
-    
-    # Parameters
-    date_range_start = Column(DateTime)
-    date_range_end = Column(DateTime)
-    filters = Column(JSON)
+    generated_by = Column(Integer, ForeignKey("users.id"))
+    file_path = Column(String(500))
     parameters = Column(JSON)
-    
-    # File information
-    file_path = Column(String)
-    file_format = Column(String)  # pdf, xlsx, csv
-    file_size = Column(Integer)
-    
-    # Status
-    status = Column(String, default="generating")  # generating, completed, failed
-    progress = Column(Integer, default=0)
-    error_message = Column(Text)
-    
-    # Timestamps
+    status = Column(String(20), default='pending')
     created_at = Column(DateTime, default=datetime.utcnow)
-    completed_at = Column(DateTime)
-    
-    # Relationships
-    school = relationship("School", back_populates="reports")
-    created_by_admin = relationship("AdminUser", back_populates="reports")
-
-class SystemConfig(Base):
-    """System-wide configuration"""
-    __tablename__ = "system_configs"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    key = Column(String, unique=True, index=True)
-    value = Column(JSON)
-    description = Column(Text)
-    
-    # Metadata
-    is_public = Column(Boolean, default=False)
-    is_required = Column(Boolean, default=False)
-    data_type = Column(String)  # string, integer, boolean, json, etc.
-    
-    # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class SystemAlert(Base):
-    """System-wide alerts and notifications"""
     __tablename__ = "system_alerts"
     
     id = Column(Integer, primary_key=True, index=True)
-    school_id = Column(Integer, index=True)  # null for system-wide alerts
-    
-    # Alert details
-    title = Column(String, index=True)
+    alert_type = Column(String(50), nullable=False)
+    severity = Column(String(20), default='info')  # info, warning, error, critical
+    title = Column(String(200), nullable=False)
     message = Column(Text)
-    alert_type = Column(String, index=True)  # info, warning, error, success
-    severity = Column(String, default="medium")  # low, medium, high, critical
-    
-    # Targeting
-    target_roles = Column(JSON)  # Which roles should see this alert
-    target_users = Column(JSON)  # Specific users to notify
-    
-    # Display settings
-    is_dismissible = Column(Boolean, default=True)
-    auto_dismiss_after = Column(Integer)  # Minutes
-    
-    # Status
-    is_active = Column(Boolean, default=True)
-    is_system_wide = Column(Boolean, default=False)
-    
-    # Timestamps
+    is_resolved = Column(Boolean, default=False)
+    resolved_by = Column(Integer, ForeignKey("users.id"))
+    resolved_at = Column(DateTime)
     created_at = Column(DateTime, default=datetime.utcnow)
-    expires_at = Column(DateTime)
 
 class BackgroundTask(Base):
-    """Background task tracking"""
     __tablename__ = "background_tasks"
     
     id = Column(Integer, primary_key=True, index=True)
-    school_id = Column(Integer, index=True)
-    created_by_admin_id = Column(Integer, ForeignKey("admin_users.id"))
-    
-    # Task details
-    task_id = Column(String, unique=True, index=True)
-    task_type = Column(String, index=True)
-    task_name = Column(String)
-    description = Column(Text)
-    
-    # Parameters
-    parameters = Column(JSON)
-    
-    # Status
-    status = Column(String, default="pending")  # pending, running, completed, failed
+    task_name = Column(String(100), nullable=False)
+    status = Column(String(20), default='pending')  # pending, running, completed, failed
     progress = Column(Integer, default=0)
     result = Column(JSON)
     error_message = Column(Text)
-    
-    # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
+    started_by = Column(Integer, ForeignKey("users.id"))
     started_at = Column(DateTime)
     completed_at = Column(DateTime)
-    
-    # Relationships
-    created_by_admin = relationship("AdminUser")
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class DataExport(Base):
-    """Data export requests"""
     __tablename__ = "data_exports"
     
     id = Column(Integer, primary_key=True, index=True)
-    school_id = Column(Integer, index=True)
-    requested_by_admin_id = Column(Integer, ForeignKey("admin_users.id"))
-    
-    # Export details
-    export_type = Column(String, index=True)  # students, teachers, grades, etc.
-    file_format = Column(String)  # csv, xlsx, json
-    
-    # Filters
-    date_range_start = Column(DateTime)
-    date_range_end = Column(DateTime)
-    filters = Column(JSON)
-    
-    # File information
-    file_path = Column(String)
-    file_size = Column(Integer)
-    download_count = Column(Integer, default=0)
-    
-    # Status
-    status = Column(String, default="pending")  # pending, processing, completed, failed
-    progress = Column(Integer, default=0)
-    error_message = Column(Text)
-    
-    # Timestamps
+    export_type = Column(String(50), nullable=False)
+    file_name = Column(String(200))
+    file_path = Column(String(500))
+    status = Column(String(20), default='pending')
+    exported_by = Column(Integer, ForeignKey("users.id"))
+    export_params = Column(JSON)
     created_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime)
-    expires_at = Column(DateTime)  # When the file will be deleted
-    
-    # Relationships
-    requested_by_admin = relationship("AdminUser")

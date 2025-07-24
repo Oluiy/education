@@ -18,10 +18,22 @@ class AIService:
     """Service for AI-powered educational content generation"""
     
     def __init__(self):
-        self.client = openai.OpenAI(
-            api_key=os.getenv('OPENAI_API_KEY')
-        )
-        self.model = os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo')
+        # Only initialize OpenAI client if API key is available
+        api_key = os.getenv('OPENAI_API_KEY')
+        if api_key:
+            self.client = openai.OpenAI(api_key=api_key)
+            self.model = os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo')
+            self.enabled = True
+        else:
+            self.client = None
+            self.model = None
+            self.enabled = False
+            logger.warning("OpenAI API key not found. AI features will be disabled.")
+    
+    def _check_ai_enabled(self):
+        """Check if AI is enabled, raise error if not"""
+        if not self.enabled:
+            raise ValueError("OpenAI API key not configured. AI features are disabled.")
     
     async def generate_study_plan(
         self, 
@@ -32,6 +44,7 @@ class AIService:
         student_performance: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Generate a comprehensive study plan"""
+        self._check_ai_enabled()
         try:
             # Prepare context for AI
             context = f"""

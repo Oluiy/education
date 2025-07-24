@@ -110,6 +110,26 @@ class StudyPlanRequest(BaseModel):
         return v
 
 
+class StudyPlanCreate(BaseModel):
+    """Schema for creating a study plan"""
+    subject: str
+    class_level: str
+    topics: List[str]
+    duration_weeks: int = Field(default=4, ge=1, le=52)
+    study_hours_per_day: float = Field(default=2.0, ge=0.5, le=8.0)
+    weak_areas: Optional[List[str]] = None
+    learning_style: Optional[LearningStyle] = None
+    user_id: Optional[int] = None
+    
+    @validator('class_level')
+    def validate_class_level(cls, v):
+        """Validate class level"""
+        allowed_levels = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3']
+        if v not in allowed_levels:
+            raise ValueError(f'Class level must be one of {allowed_levels}')
+        return v
+
+
 class StudyPlanResponse(BaseModel):
     """Study plan response"""
     plan_id: int
@@ -314,3 +334,62 @@ class BulkResourceResponse(BaseModel):
     failed: int
     results: List[AssistantPlanResponse]
     errors: List[Dict[str, Any]]
+
+
+class StudyResourceRequest(BaseModel):
+    """Request for study resource generation"""
+    resource_type: ResourceType
+    subject: str
+    class_level: str
+    topic: str
+    difficulty_level: Optional[str] = "medium"
+    user_id: Optional[int] = None
+    
+    @validator('class_level')
+    def validate_class_level(cls, v):
+        """Validate class level"""
+        allowed_levels = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3']
+        if v not in allowed_levels:
+            raise ValueError(f'Class level must be one of {allowed_levels}')
+        return v
+    
+    @validator('difficulty_level')
+    def validate_difficulty(cls, v):
+        """Validate difficulty level"""
+        allowed_levels = ['easy', 'medium', 'hard']
+        if v not in allowed_levels:
+            raise ValueError(f'Difficulty level must be one of {allowed_levels}')
+        return v
+
+class StudentActivityCreate(BaseModel):
+    """Schema for creating student activity"""
+    activity_type: ActivityType
+    subject: str
+    topic: str
+    duration_minutes: int = Field(ge=1, le=480)
+    score: Optional[float] = Field(None, ge=0, le=100)
+    difficulty_level: Optional[str] = "medium"
+    user_id: Optional[int] = None
+    completed: bool = False
+    
+    @validator('difficulty_level')
+    def validate_difficulty(cls, v):
+        """Validate difficulty level"""
+        allowed_levels = ['easy', 'medium', 'hard']
+        if v not in allowed_levels:
+            raise ValueError(f'Difficulty level must be one of {allowed_levels}')
+        return v
+
+class LearningAnalyticsResponse(BaseModel):
+    """Response for learning analytics"""
+    user_id: int
+    total_study_time: int
+    subjects_studied: List[str]
+    topics_mastered: List[str]
+    average_score: float
+    improvement_areas: List[str]
+    study_streak: int
+    last_activity: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
