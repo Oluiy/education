@@ -3,6 +3,10 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useDashboardStats, useRecentActivity } from '@/lib/hooks'
+import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/contexts/ToastContext'
+import { LoadingSpinner, CardSkeleton } from '@/components/ui/Loading'
+import { ErrorAlert, EmptyState } from '@/components/ui/Error'
 import {
   BookOpenIcon,
   ClockIcon,
@@ -12,7 +16,8 @@ import {
   UserGroupIcon,
   TrophyIcon,
   PlayIcon,
-  ExclamationCircleIcon
+  ExclamationCircleIcon,
+  PlusIcon
 } from '@heroicons/react/24/outline'
 
 // Type definitions

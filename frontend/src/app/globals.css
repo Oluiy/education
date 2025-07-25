@@ -134,16 +134,16 @@
     @apply grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
   }
   
-  /* African-inspired decorative elements */
+  /* African-inspired decorative elements - updated with mature colors */
   .african-pattern {
     background-image: 
-      radial-gradient(circle at 25% 25%, #f0780a15 2px, transparent 2px),
-      radial-gradient(circle at 75% 75%, #22c55e15 2px, transparent 2px);
+      radial-gradient(circle at 25% 25%, #37415115 2px, transparent 2px),
+      radial-gradient(circle at 75% 75%, #0f766e15 2px, transparent 2px);
     background-size: 24px 24px;
   }
   
   .african-gradient {
-    background: linear-gradient(135deg, #f0780a 0%, #e15d00 50%, #22c55e 100%);
+    background: linear-gradient(135deg, #374151 0%, #1e293b 50%, #0f766e 100%);
   }
 }
 

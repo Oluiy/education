@@ -1,7 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
+import { SearchAndFilter } from '@/components/ui/SearchAndFilter'
+import { LoadingSpinner, CardSkeleton } from '@/components/ui/Loading'
+import { EmptyState } from '@/components/ui/Error'
 import {
   BookOpenIcon,
   ClockIcon,
@@ -113,19 +116,101 @@ const difficulties = ['All', 'Beginner', 'Intermediate', 'Advanced']
 
 export default function CoursesPage() {
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('All')
-  const [selectedDifficulty, setSelectedDifficulty] = useState('All')
-  const [viewMode, setViewMode] = useState<'enrolled' | 'all'>('enrolled')
-
-  const filteredCourses = mockCourses.filter(course => {
-    const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.instructor.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === 'All' || course.category === selectedCategory
-    const matchesDifficulty = selectedDifficulty === 'All' || course.difficulty === selectedDifficulty
-    const matchesViewMode = viewMode === 'all' || course.isEnrolled
-
-    return matchesSearch && matchesCategory && matchesDifficulty && matchesViewMode
+  const [activeFilters, setActiveFilters] = useState({
+    category: '',
+    difficulty: '',
+    enrolled: ''
   })
+  const [sortValue, setSortValue] = useState('recent')
+
+  // Filter configuration for SearchAndFilter component
+  const filterConfig = [
+    {
+      id: 'category',
+      label: 'Category',
+      type: 'select' as const,
+      options: categories.slice(1).map(cat => ({ label: cat, value: cat }))
+    },
+    {
+      id: 'difficulty',
+      label: 'Difficulty',
+      type: 'select' as const,
+      options: difficulties.slice(1).map(diff => ({ label: diff, value: diff }))
+    },
+    {
+      id: 'enrolled',
+      label: 'Enrollment Status',
+      type: 'select' as const,
+      options: [
+        { label: 'Enrolled Only', value: 'enrolled' },
+        { label: 'Available', value: 'available' }
+      ]
+    }
+  ]
+
+  const sortOptions = [
+    { label: 'Recently Accessed', value: 'recent' },
+    { label: 'Progress (High to Low)', value: 'progress-desc' },
+    { label: 'Alphabetical', value: 'alphabetical' },
+    { label: 'Rating (High to Low)', value: 'rating-desc' }
+  ]
+
+  // Enhanced filtering logic
+  const filteredAndSortedCourses = useMemo(() => {
+    let filtered = mockCourses.filter(course => {
+      const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           course.instructor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           course.description.toLowerCase().includes(searchTerm.toLowerCase())
+      
+      const matchesCategory = !activeFilters.category || course.category === activeFilters.category
+      const matchesDifficulty = !activeFilters.difficulty || course.difficulty === activeFilters.difficulty
+      
+      let matchesEnrollment = true
+      if (activeFilters.enrolled === 'enrolled') {
+        matchesEnrollment = course.isEnrolled
+      } else if (activeFilters.enrolled === 'available') {
+        matchesEnrollment = !course.isEnrolled
+      }
+
+      return matchesSearch && matchesCategory && matchesDifficulty && matchesEnrollment
+    })
+
+    // Sort the filtered results
+    filtered.sort((a, b) => {
+      switch (sortValue) {
+        case 'progress-desc':
+          return b.progress - a.progress
+        case 'alphabetical':
+          return a.title.localeCompare(b.title)
+        case 'rating-desc':
+          return b.rating - a.rating
+        case 'recent':
+        default:
+          // Sort by enrollment status first, then by progress
+          if (a.isEnrolled && !b.isEnrolled) return -1
+          if (!a.isEnrolled && b.isEnrolled) return 1
+          return b.progress - a.progress
+      }
+    })
+
+    return filtered
+  }, [searchTerm, activeFilters, sortValue])
+
+  const handleFilterChange = (filterId: string, value: any) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      [filterId]: value
+    }))
+  }
+
+  const handleClearFilters = () => {
+    setActiveFilters({
+      category: '',
+      difficulty: '',
+      enrolled: ''
+    })
+    setSearchTerm('')
+  }
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -147,86 +232,40 @@ export default function CoursesPage() {
         <div className="space-y-6">
           {/* Header */}
           <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col lg:flex-row lg:items-center lg:justify-between"
-        >
-          <div>
-            <h1 className="text-2xl font-heading font-bold text-gray-900 mb-2">
-              My Courses
-            </h1>
-            <p className="text-gray-600">
-              Continue your learning journey with our comprehensive courses
-            </p>
-          </div>
-          
-          <div className="flex items-center space-x-4 mt-4 lg:mt-0">
-            <div className="flex bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('enrolled')}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  viewMode === 'enrolled'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Enrolled ({mockCourses.filter(c => c.isEnrolled).length})
-              </button>
-              <button
-                onClick={() => setViewMode('all')}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  viewMode === 'all'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Browse All
-              </button>
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col lg:flex-row lg:items-center lg:justify-between"
+          >
+            <div>
+              <h1 className="text-2xl font-heading font-bold text-gray-900 mb-2">
+                My Courses
+              </h1>
+              <p className="text-gray-600">
+                Continue your learning journey with our comprehensive courses
+              </p>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
 
         {/* Search and Filters */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex flex-col lg:flex-row gap-4"
         >
-          {/* Search */}
-          <div className="relative flex-1">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search courses..."
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          {/* Filters */}
-          <div className="flex flex-wrap gap-4">
-            <select
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-            >
-              {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-
-            <select
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              value={selectedDifficulty}
-              onChange={(e) => setSelectedDifficulty(e.target.value)}
-            >
-              {difficulties.map(difficulty => (
-                <option key={difficulty} value={difficulty}>{difficulty}</option>
-              ))}
-            </select>
-          </div>
+          <SearchAndFilter
+            searchPlaceholder="Search courses, instructors..."
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            filters={filterConfig}
+            activeFilters={activeFilters}
+            onFilterChange={handleFilterChange}
+            onClearFilters={handleClearFilters}
+            sortOptions={sortOptions}
+            sortValue={sortValue}
+            onSortChange={setSortValue}
+            resultsCount={filteredAndSortedCourses.length}
+            className="mb-6"
+          />
         </motion.div>
 
         {/* Course Grid */}
@@ -234,9 +273,28 @@ export default function CoursesPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {filteredCourses.map((course, index) => (
+          {filteredAndSortedCourses.length === 0 ? (
+            <EmptyState
+              icon={BookOpenIcon}
+              title="No courses found"
+              description={
+                searchTerm || Object.values(activeFilters).some(v => v)
+                  ? "Try adjusting your search or filters to find courses."
+                  : "You haven't enrolled in any courses yet. Browse available courses to get started."
+              }
+              action={{
+                label: "Browse All Courses",
+                onClick: () => {
+                  handleClearFilters()
+                  setActiveFilters(prev => ({ ...prev, enrolled: '' }))
+                }
+              }}
+              className="py-12"
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredAndSortedCourses.map((course, index) => (
             <motion.div
               key={course.id}
               initial={{ opacity: 0, y: 20 }}
@@ -335,30 +393,9 @@ export default function CoursesPage() {
               </div>
             </motion.div>
           ))}
+            </div>
+          )}
         </motion.div>
-
-        {/* Empty state */}
-        {filteredCourses.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12"
-          >
-            <BookOpenIcon className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No courses found</h3>
-            <p className="text-gray-600 mb-6">
-              Try adjusting your search criteria or browse all available courses.
-            </p>
-            {viewMode === 'enrolled' && (
-              <button
-                onClick={() => setViewMode('all')}
-                className="btn-primary"
-              >
-                Browse All Courses
-              </button>
-            )}
-          </motion.div>
-        )}
         </div>
       </div>
     </div>

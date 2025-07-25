@@ -48,39 +48,40 @@ export default function DashboardLayout({
       )}
 
       {/* Mobile sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out md:hidden ${
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out md:hidden ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
           <Link href="/dashboard" className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">EN</span>
             </div>
             <span className="text-xl font-bold text-gray-900">EduNerve</span>
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="p-2 text-gray-400 hover:text-gray-500"
+            className="p-2 text-gray-400 hover:text-gray-500 rounded-lg hover:bg-gray-100"
+            aria-label="Close sidebar"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
         
-        <nav className="flex-1 px-4 py-6 space-y-2">
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
           {navigation.map((item) => {
             const isActive = pathname === item.href
             return (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                className={`flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
                   isActive
-                    ? 'bg-blue-100 text-blue-900 border-r-2 border-blue-500'
+                    ? 'bg-primary-100 text-primary-900 border-r-2 border-primary-500'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
                 onClick={() => setSidebarOpen(false)}
               >
-                <item.icon className="w-5 h-5 mr-3" />
+                <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
                 {item.name}
               </Link>
             )

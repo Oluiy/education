@@ -3,29 +3,59 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
+import { useFormValidation, validationHelpers } from '@/lib/useFormValidation'
+import { useAuth } from '@/contexts/AuthContext'
+import { LoadingSpinner } from '@/components/ui/Loading'
+import { ErrorAlert } from '@/components/ui/Error'
+
+interface LoginForm {
+  email: string
+  password: string
+  rememberMe: boolean
+}
 
 export default function LoginPage() {
+  const router = useRouter()
+  const { login } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    rememberMe: false
+  const [apiError, setApiError] = useState('')
+
+  const {
+    values,
+    errors,
+    isSubmitting,
+    handleChange,
+    handleSubmit,
+    setErrors
+  } = useFormValidation<LoginForm>({
+    initialValues: {
+      email: '',
+      password: '',
+      rememberMe: false
+    },
+    validationRules: {
+      email: {
+        required: true,
+        custom: validationHelpers.email
+      },
+      password: {
+        required: true,
+        minLength: 6
+      }
+    },
+    onSubmit: async (formData) => {
+      try {
+        setApiError('')
+        await login(formData.email, formData.password)
+        router.push('/dashboard')
+      } catch (error: any) {
+        console.error('Login error:', error)
+        setApiError(error.message || 'Login failed. Please check your credentials.')
+      }
+    }
   })
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Handle login logic here
-    console.log('Login attempt:', formData)
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }))
-  }
 
   return (
     <div className="min-h-screen flex">
@@ -53,6 +83,14 @@ export default function LoginPage() {
           </div>
 
           {/* Login form */}
+          {apiError && (
+            <ErrorAlert
+              message={apiError}
+              onClose={() => setApiError('')}
+              className="mb-4"
+            />
+          )}
+          
           <form className="space-y-8" onSubmit={handleSubmit}>
             <div className="space-y-6">
               <div>
@@ -64,12 +102,14 @@ export default function LoginPage() {
                 name="email"
                 type="email"
                 autoComplete="email"
-                required
-                className="input"
+                className={`input ${errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
                 placeholder="Enter your email"
-                value={formData.email}
+                value={values.email}
                 onChange={handleChange}
               />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
             </div>
 
             <div>
@@ -82,10 +122,9 @@ export default function LoginPage() {
                   name="password"
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
-                  required
-                  className="input pr-10"
+                  className={`input pr-10 ${errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
                   placeholder="Enter your password"
-                  value={formData.password}
+                  value={values.password}
                   onChange={handleChange}
                 />
                 <button
@@ -100,6 +139,9 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+              )}
             </div>
 
             <div className="flex items-center justify-between">
@@ -109,7 +151,7 @@ export default function LoginPage() {
                   name="rememberMe"
                   type="checkbox"
                   className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                  checked={formData.rememberMe}
+                  checked={values.rememberMe}
                   onChange={handleChange}
                 />
                 <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-700">
@@ -128,9 +170,17 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="btn-primary w-full"
+              disabled={isSubmitting}
+              className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              Sign in
+              {isSubmitting ? (
+                <>
+                  <LoadingSpinner size="sm" color="white" className="mr-2" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign in'
+              )}
             </button>
           </form>
 
