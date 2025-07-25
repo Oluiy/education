@@ -148,15 +148,15 @@ export default function QuizzesPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Main Content - Centralized */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Quizzes & Assessments</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Quizzes & Assessments</h1>
               <p className="text-gray-600 mt-1">Create and manage quizzes for your courses</p>
             </div>
             <Link href="/dashboard/quizzes/create">
-              <button className="btn-primary flex items-center space-x-2">
+              <button className="btn-primary flex items-center justify-center space-x-2 w-full sm:w-auto">
                 <PlusIcon className="w-5 h-5" />
                 <span>Create Quiz</span>
               </button>
@@ -178,7 +178,7 @@ export default function QuizzesPage() {
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="px-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="all">All Quizzes</option>
               <option value="published">Published</option>
@@ -196,26 +196,26 @@ export default function QuizzesPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-xl shadow-soft border border-gray-200 p-6 hover:shadow-strong transition-shadow duration-200"
+              className="bg-white rounded-xl shadow-soft border border-gray-200 p-4 sm:p-6 hover:shadow-strong transition-shadow duration-200"
             >
-              <div className="flex items-start justify-between">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                     <h3 className="text-lg font-semibold text-gray-900">{quiz.title}</h3>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(quiz.status)}`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${getStatusColor(quiz.status)}`}>
                       {quiz.status}
                     </span>
                   </div>
                   
                   <p className="text-gray-600 mb-3">{quiz.description}</p>
                   
-                  <div className="flex items-center gap-6 text-sm text-gray-500 mb-4">
+                  <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm text-gray-500 mb-4">
                     <div className="flex items-center gap-1">
-                      <ClipboardDocumentListIcon className="w-4 h-4" />
-                      <span>{quiz.course_name}</span>
+                      <ClipboardDocumentListIcon className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">{quiz.course_name}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <ClockIcon className="w-4 h-4" />
+                      <ClockIcon className="w-4 h-4 flex-shrink-0" />
                       <span>{formatDuration(quiz.duration)}</span>
                     </div>
                     <div className="flex items-center gap-1">
@@ -227,9 +227,9 @@ export default function QuizzesPage() {
                   </div>
 
                   {quiz.status === 'published' && (
-                    <div className="flex items-center gap-6 text-sm">
+                    <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm">
                       <div className="flex items-center gap-1">
-                        <CheckCircleIcon className="w-4 h-4 text-green-500" />
+                        <CheckCircleIcon className="w-4 h-4 text-green-500 flex-shrink-0" />
                         <span className="text-gray-600">
                           {quiz.attempts} attempts
                         </span>
@@ -248,30 +248,30 @@ export default function QuizzesPage() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 ml-4">
-                  <Link href={`/dashboard/quizzes/${quiz.id}`}>
-                    <button className="flex items-center gap-1 px-3 py-1.5 text-sm bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 transition-colors">
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+                  <Link href={`/dashboard/quizzes/${quiz.id}`} className="flex-1 sm:flex-none">
+                    <button className="flex items-center justify-center gap-1 px-3 py-1.5 text-sm bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 transition-colors w-full sm:w-auto">
                       <EyeIcon className="w-4 h-4" />
-                      View
+                      <span className="hidden sm:inline">View</span>
                     </button>
                   </Link>
-                  <Link href={`/dashboard/quizzes/${quiz.id}/edit`}>
-                    <button className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                  <Link href={`/dashboard/quizzes/${quiz.id}/edit`} className="flex-1 sm:flex-none">
+                    <button className="flex items-center justify-center gap-1 px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors w-full sm:w-auto">
                       <PencilIcon className="w-4 h-4" />
-                      Edit
+                      <span className="hidden sm:inline">Edit</span>
                     </button>
                   </Link>
                   {quiz.status === 'published' && (
-                    <Link href={`/dashboard/quizzes/${quiz.id}/results`}>
-                      <button className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
+                    <Link href={`/dashboard/quizzes/${quiz.id}/results`} className="flex-1 sm:flex-none">
+                      <button className="flex items-center justify-center gap-1 px-3 py-1.5 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors w-full sm:w-auto">
                         <ClipboardDocumentListIcon className="w-4 h-4" />
-                        Results
+                        <span className="hidden sm:inline">Results</span>
                       </button>
                     </Link>
                   )}
-                  <button className="flex items-center gap-1 px-3 py-1.5 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors">
+                  <button className="flex items-center justify-center gap-1 px-3 py-1.5 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors flex-1 sm:flex-none w-full sm:w-auto">
                     <TrashIcon className="w-4 h-4" />
-                    Delete
+                    <span className="hidden sm:inline">Delete</span>
                   </button>
                 </div>
               </div>
@@ -280,17 +280,17 @@ export default function QuizzesPage() {
         </div>
 
         {filteredQuizzes.length === 0 && (
-          <div className="text-center py-12">
-            <ClipboardDocumentListIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <div className="text-center py-12 px-4">
+            <ClipboardDocumentListIcon className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No quizzes found</h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 mb-4 text-sm sm:text-base">
               {searchTerm || filter !== 'all' 
                 ? 'Try adjusting your search or filter criteria' 
                 : 'Get started by creating your first quiz'}
             </p>
             {!searchTerm && filter === 'all' && (
               <Link href="/dashboard/quizzes/create">
-                <button className="btn-primary">
+                <button className="btn-primary inline-flex items-center">
                   <PlusIcon className="w-5 h-5 mr-2" />
                   Create Your First Quiz
                 </button>
