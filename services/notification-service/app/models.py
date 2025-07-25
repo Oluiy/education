@@ -80,22 +80,7 @@ class NotificationRecipient(Base):
     failed_reason = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-class NotificationQueue(Base):
-    __tablename__ = "notification_queue"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    notification_id = Column(String(100), ForeignKey("notifications.notification_id"))
-    recipient_id = Column(String(100), ForeignKey("notification_recipients.recipient_id"))
-    queue_name = Column(String(50), default="normal")
-    priority = Column(Integer, default=5)
-    status = Column(String(20), default="pending")
-    retry_count = Column(Integer, default=0)
-    max_retries = Column(Integer, default=3)
-    next_retry = Column(DateTime)
-    processing_started = Column(DateTime)
-    processing_completed = Column(DateTime)
-    worker_id = Column(String(100))
-    queued_at = Column(DateTime, default=datetime.utcnow)
+
 
 class NotificationDeliveryLog(Base):
     __tablename__ = "notification_delivery_logs"
@@ -140,6 +125,7 @@ class BulkNotification(Base):
 
 class NotificationQueue(Base):
     __tablename__ = "notification_queue"
+    __table_args__ = {'extend_existing': True}
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))

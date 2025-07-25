@@ -251,7 +251,7 @@ class NotificationService:
                 .filter(
                     and_(
                         models.NotificationQueue.status == "pending",
-                        models.NotificationQueue.queue_name == queue_name,
+                        models.NotificationQueue.notification_type == queue_name,
                         or_(
                             models.NotificationQueue.next_retry.is_(None),
                             models.NotificationQueue.next_retry <= datetime.utcnow()
@@ -311,7 +311,7 @@ class NotificationService:
             return results
             
         except Exception as e:
-            logger.error(f"Error processing queue: {str(e)}")
+            logger.error(f"Error processing queue: {str(e)}", exc_info=True)
             return {
                 "processed": 0,
                 "success": 0,

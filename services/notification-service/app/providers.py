@@ -542,12 +542,13 @@ class PushNotificationProvider(NotificationProvider):
             from firebase_admin import credentials, messaging
             
             service_account_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH")
-            if service_account_path and os.path.exists(service_account_path):
-                cred = credentials.Certificate(service_account_path)
-                firebase_admin.initialize_app(cred)
-            else:
-                # Use default credentials
-                firebase_admin.initialize_app()
+            if not firebase_admin._apps:
+                if service_account_path and os.path.exists(service_account_path):
+                    cred = credentials.Certificate(service_account_path)
+                    firebase_admin.initialize_app(cred)
+                else:
+                    # Use default credentials
+                    firebase_admin.initialize_app()
             
             self.messaging = messaging
             self.firebase_available = True

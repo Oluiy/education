@@ -243,6 +243,16 @@ class SecureErrorHandler:
             content=response,
             headers={"Retry-After": "60"}
         )
+    
+    @staticmethod
+    def add_handlers(app):
+        """Add all secure error handlers to the FastAPI app"""
+        app.add_exception_handler(HTTPException, SecureErrorHandler.authentication_error_handler)
+        app.add_exception_handler(status.HTTP_403_FORBIDDEN, SecureErrorHandler.authorization_error_handler)
+        app.add_exception_handler(status.HTTP_422_UNPROCESSABLE_ENTITY, SecureErrorHandler.validation_error_handler)
+        app.add_exception_handler(SecurityError, SecureErrorHandler.security_error_handler)
+        app.add_exception_handler(Exception, SecureErrorHandler.internal_error_handler)
+        app.add_exception_handler(status.HTTP_429_TOO_MANY_REQUESTS, SecureErrorHandler.rate_limit_error_handler)
 
 def safe_str(value: Any) -> str:
     """Safely convert value to string without exposing sensitive data"""
