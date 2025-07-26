@@ -4,6 +4,7 @@ import { useState, ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { NotificationPermissionBanner } from '@/components/notifications/NotificationPermission'
 import {
   HomeIcon,
   BookOpenIcon,
@@ -248,6 +249,7 @@ export default function DashboardLayout({ children, userType = 'student' }: Dash
 
         {/* Page content */}
         <main className="flex-1 overflow-auto bg-gray-50">
+          <NotificationPermissionBanner />
           <div className="w-full h-full">
             {children}
           </div>

@@ -20,7 +20,7 @@ export default function SignupPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [formData, setFormData] = useState({
     // Step 1: Account type
-    accountType: 'school',
+    accountType: 'student',
     
     // Step 2: Basic info
     schoolName: '',
@@ -188,7 +188,7 @@ export default function SignupPage() {
       <div className="space-y-4">
         {[
           {
-            value: 'school',
+            value: 'admin',
             title: 'School Administrator',
             description: 'Set up EduNerve for your school',
             icon: '🏫'
@@ -198,6 +198,12 @@ export default function SignupPage() {
             title: 'Teacher',
             description: 'Join an existing school account',
             icon: '👨‍🏫'
+          },
+          {
+            value: 'student',
+            title: 'Student',
+            description: 'Access courses and assignments',
+            icon: '🎓'
           },
           {
             value: 'parent',

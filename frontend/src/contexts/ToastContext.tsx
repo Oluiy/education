@@ -22,6 +22,7 @@ interface ToastContextType {
   error: (title: string, message?: string) => void
   warning: (title: string, message?: string) => void
   info: (title: string, message?: string) => void
+  showToast?: (type: ToastType, title: string, message?: string) => void
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined)
