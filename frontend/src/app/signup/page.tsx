@@ -3,12 +3,21 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { EyeIcon, EyeSlashIcon, CheckIcon } from '@heroicons/react/24/outline'
+import { useAuth } from '@/contexts/AuthContext'
+import { LoadingSpinner } from '@/components/ui/Loading'
+import { ErrorAlert } from '@/components/ui/Error'
 
 export default function SignupPage() {
+  const router = useRouter()
+  const { signup } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [apiError, setApiError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [formData, setFormData] = useState({
     // Step 1: Account type
     accountType: 'school',
@@ -34,13 +43,111 @@ export default function SignupPage() {
     subscribeNewsletter: true
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateCurrentStep = (): boolean => {
+    const errors: Record<string, string> = {}
+    
+    switch (currentStep) {
+      case 1:
+        if (!formData.accountType) {
+          errors.accountType = 'Please select an account type'
+        }
+        break
+        
+      case 2:
+        if (formData.accountType === 'school' && !formData.schoolName.trim()) {
+          errors.schoolName = 'School name is required'
+        }
+        if (!formData.firstName.trim()) {
+          errors.firstName = 'First name is required'
+        }
+        if (!formData.lastName.trim()) {
+          errors.lastName = 'Last name is required'
+        }
+        if (!formData.email.trim()) {
+          errors.email = 'Email is required'
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+          errors.email = 'Please enter a valid email address'
+        }
+        if (!formData.phone.trim()) {
+          errors.phone = 'Phone number is required'
+        }
+        break
+        
+      case 3:
+        if (!formData.country) {
+          errors.country = 'Country is required'
+        }
+        if (!formData.state.trim()) {
+          errors.state = 'State/Region is required'
+        }
+        if (!formData.city.trim()) {
+          errors.city = 'City is required'
+        }
+        if (formData.accountType === 'school') {
+          if (!formData.schoolType) {
+            errors.schoolType = 'School type is required'
+          }
+          if (!formData.studentCount) {
+            errors.studentCount = 'Student count is required'
+          }
+        }
+        break
+        
+      case 4:
+        if (!formData.password) {
+          errors.password = 'Password is required'
+        } else if (formData.password.length < 8) {
+          errors.password = 'Password must be at least 8 characters long'
+        }
+        if (!formData.confirmPassword) {
+          errors.confirmPassword = 'Please confirm your password'
+        } else if (formData.password !== formData.confirmPassword) {
+          errors.confirmPassword = 'Passwords do not match'
+        }
+        if (!formData.agreeToTerms) {
+          errors.agreeToTerms = 'You must agree to the terms and conditions'
+        }
+        break
+    }
+    
+    setFieldErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!validateCurrentStep()) {
+      return
+    }
+    
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1)
     } else {
       // Final submission
-      console.log('Signup attempt:', formData)
+      setIsSubmitting(true)
+      setApiError('')
+      
+      try {
+        await signup(formData)
+        // Redirect to appropriate dashboard based on account type
+        switch (formData.accountType) {
+          case 'teacher':
+            router.push('/teacher/dashboard')
+            break
+          case 'parent':
+            router.push('/parent/dashboard')
+            break
+          case 'school':
+          default:
+            router.push('/admin/dashboard')
+        }
+      } catch (error: any) {
+        console.error('Signup error:', error)
+        setApiError(error.message || 'Signup failed. Please try again.')
+      } finally {
+        setIsSubmitting(false)
+      }
     }
   }
 
@@ -52,6 +159,14 @@ export default function SignupPage() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }))
+
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }))
+    }
   }
 
   const renderStep1 = () => (
@@ -149,11 +264,14 @@ export default function SignupPage() {
             name="schoolName"
             type="text"
             required
-            className="input"
+            className={`input ${fieldErrors.schoolName ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
             placeholder="Enter your school name"
             value={formData.schoolName}
             onChange={handleChange}
           />
+          {fieldErrors.schoolName && (
+            <p className="mt-1 text-sm text-red-600">{fieldErrors.schoolName}</p>
+          )}
         </div>
       )}
 
@@ -167,11 +285,14 @@ export default function SignupPage() {
             name="firstName"
             type="text"
             required
-            className="input"
+            className={`input ${fieldErrors.firstName ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
             placeholder="First name"
             value={formData.firstName}
             onChange={handleChange}
           />
+          {fieldErrors.firstName && (
+            <p className="mt-1 text-sm text-red-600">{fieldErrors.firstName}</p>
+          )}
         </div>
         <div>
           <label htmlFor="lastName" className="label">
@@ -182,11 +303,14 @@ export default function SignupPage() {
             name="lastName"
             type="text"
             required
-            className="input"
+            className={`input ${fieldErrors.lastName ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
             placeholder="Last name"
             value={formData.lastName}
             onChange={handleChange}
           />
+          {fieldErrors.lastName && (
+            <p className="mt-1 text-sm text-red-600">{fieldErrors.lastName}</p>
+          )}
         </div>
       </div>
 
@@ -199,11 +323,14 @@ export default function SignupPage() {
           name="email"
           type="email"
           required
-          className="input"
+          className={`input ${fieldErrors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
           placeholder="Enter your email"
           value={formData.email}
           onChange={handleChange}
         />
+        {fieldErrors.email && (
+          <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>
+        )}
       </div>
 
       <div>
@@ -215,11 +342,14 @@ export default function SignupPage() {
           name="phone"
           type="tel"
           required
-          className="input"
+          className={`input ${fieldErrors.phone ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
           placeholder="+234 xxx xxx xxxx"
           value={formData.phone}
           onChange={handleChange}
         />
+        {fieldErrors.phone && (
+          <p className="mt-1 text-sm text-red-600">{fieldErrors.phone}</p>
+        )}
       </div>
     </motion.div>
   )
@@ -512,6 +642,14 @@ export default function SignupPage() {
 
         {/* Form */}
         <div className="bg-white rounded-2xl shadow-soft p-8">
+          {apiError && (
+            <ErrorAlert
+              message={apiError}
+              onClose={() => setApiError('')}
+              className="mb-6"
+            />
+          )}
+          
           <form onSubmit={handleSubmit}>
             {currentStep === 1 && renderStep1()}
             {currentStep === 2 && renderStep2()}
@@ -536,9 +674,17 @@ export default function SignupPage() {
 
               <button
                 type="submit"
-                className="btn-primary"
+                disabled={isSubmitting}
+                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
-                {currentStep === 4 ? 'Create Account' : 'Next'}
+                {isSubmitting ? (
+                  <>
+                    <LoadingSpinner size="sm" color="white" className="mr-2" />
+                    {currentStep === 4 ? 'Creating Account...' : 'Next'}
+                  </>
+                ) : (
+                  currentStep === 4 ? 'Create Account' : 'Next'
+                )}
               </button>
             </div>
           </form>
