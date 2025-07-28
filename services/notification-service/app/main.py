@@ -21,6 +21,7 @@ from .notification_service import NotificationService
 from .security_config import SecurityConfig
 from .cors_config import apply_secure_cors
 from .error_handling import SecureErrorHandler
+from api.notifications import router as notifications_router
 import uvicorn
 
 # Enhanced logging configuration
@@ -80,6 +81,9 @@ apply_secure_cors(app)
 # Add secure error handlers
 error_handler = SecureErrorHandler()
 error_handler.add_handlers(app)
+
+# Include routers
+app.include_router(notifications_router)
 
 # Security
 security = HTTPBearer()

@@ -1,32 +1,25 @@
 """
-EduNerve Authentication Service - Enhanced Main FastAPI Application
-Multi-tenant, role-based authentication system with comprehensive security
+EduNerve Authentication Service - Main Application
+FastAPI application with comprehensive authentication features
 """
 
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import FastAPI, Request, HTTPException, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.security import HTTPBearer
+from fastapi.responses import JSONResponse, Response
 from contextlib import asynccontextmanager
+import time
+import logging
+import redis
 import uvicorn
 import os
-import logging
 from dotenv import load_dotenv
 
-from app.database import create_tables
-from app.routes import router
-from app.schemas import ErrorResponse
-
-# Import security modules
-from app.cors_config import apply_secure_cors
-from app.error_handling import (
-    SecureErrorHandler, 
-    ErrorResponseHandler, 
-    SecurityError
-)
-from app.input_validation import sanitize_request_data
-from app.security_config import SecurityConfig
+# Import local modules
+from .database import create_tables, check_database_connection
+from .api import auth, profile
+from .core.security import RateLimiter
 
 # Load environment variables
 load_dotenv()
@@ -34,201 +27,242 @@ load_dotenv()
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
+# Redis client for rate limiting and caching
+try:
+    redis_client = redis.Redis(
+        host=os.getenv("REDIS_HOST", "localhost"),
+        port=int(os.getenv("REDIS_PORT", "6379")),
+        db=int(os.getenv("REDIS_DB", "0")),
+        decode_responses=True,
+        socket_timeout=5,
+        socket_connect_timeout=5,
+        retry_on_timeout=True
+    )
+    # Test Redis connection
+    redis_client.ping()
+    logger.info("Redis connection established")
+except Exception as e:
+    logger.warning(f"Redis connection failed: {e}. Rate limiting disabled.")
+    redis_client = None
+
+# Rate limiter
+rate_limiter = RateLimiter(redis_client) if redis_client else None
+
+# Application lifecycle
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Enhanced application lifespan manager with security initialization
-    """
     # Startup
-    logger.info("🚀 Starting EduNerve Authentication Service with enhanced security...")
+    logger.info("Starting EduNerve Auth Service...")
     
-    # Initialize security configuration
-    security_config = SecurityConfig()
-    logger.info("✅ Security configuration initialized")
+    # Check database connection
+    if not check_database_connection():
+        logger.error("Database connection failed")
+        raise Exception("Cannot connect to database")
     
     # Create database tables
-    create_tables()
-    logger.info("✅ Database tables created successfully")
+    try:
+        create_tables()
+        logger.info("Database tables verified/created")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
+        raise
     
-    # Security startup checks
-    logger.info("🔐 Security system initialized successfully")
-    logger.info("✅ Authentication service ready")
+    logger.info("Auth service startup complete")
     
     yield
     
     # Shutdown
-    logger.info("🔴 Shutting down EduNerve Authentication Service...")
-
-# Create FastAPI application with security configurations
+    logger.info("Shutting down Auth Service...")
+    if redis_client:
+        redis_client.close()
+    logger.info("Auth service shutdown complete")
+# Create FastAPI application
 app = FastAPI(
     title="EduNerve Authentication Service",
-    description="Multi-tenant authentication system with enhanced security for African secondary schools",
-    version="2.0.0",
-    docs_url="/docs" if os.getenv("ENVIRONMENT", "development") == "development" else None,
-    redoc_url="/redoc" if os.getenv("ENVIRONMENT", "development") == "development" else None,
-    lifespan=lifespan,
-    # Security headers
-    responses={
-        401: {"description": "Authentication required"},
-        403: {"description": "Access denied"},
-        422: {"description": "Invalid input data"},
-        429: {"description": "Too many requests"},
-        500: {"description": "Internal server error"}
-    }
+    description="Comprehensive authentication and user management service for EduNerve platform",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
-# Security middleware (order matters)
-# 1. Trusted host middleware for host header validation
-if os.getenv("ENVIRONMENT") == "production":
-    allowed_hosts = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001", 
+        "https://edunerve.com",
+        "https://app.edunerve.com"
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
 
-# 2. CORS middleware with secure configuration
-apply_secure_cors(app)
-
-# 3. GZip compression
-app.add_middleware(GZipMiddleware, minimum_size=1000)
-
-# 4. Request sanitization middleware
+# Security headers middleware
 @app.middleware("http")
-async def security_middleware(request: Request, call_next):
-    """
-    Security middleware for request validation and sanitization
-    """
-    try:
-        # Log request for security monitoring
-        logger.info(
-            f"Request: {request.method} {request.url} "
-            f"from {request.client.host if request.client else 'unknown'}"
-        )
-        
-        # Add security headers to response
-        response = await call_next(request)
-        
-        # Security headers
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
-        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
-        
-        if os.getenv("ENVIRONMENT") == "production":
-            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-        
-        return response
-        
-    except Exception as e:
-        logger.error(f"Security middleware error: {e}")
-        return await SecureErrorHandler.internal_error_handler(request, e)
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    
+    return response
 
-# Enhanced exception handlers
-@app.exception_handler(SecurityError)
-async def security_exception_handler(request: Request, exc: SecurityError):
-    """Handle security-related errors"""
-    return await SecureErrorHandler.security_error_handler(request, exc)
+# Request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    
+    response = await call_next(request)
+    
+    process_time = time.time() - start_time
+    
+    logger.info(
+        f"{request.method} {request.url.path} - "
+        f"Status: {response.status_code} - "
+        f"Time: {process_time:.3f}s - "
+        f"IP: {request.client.host}"
+    )
+    
+    response.headers["X-Process-Time"] = str(process_time)
+    return response
 
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    """Enhanced HTTP exception handler"""
-    if exc.status_code == 401:
-        return await SecureErrorHandler.authentication_error_handler(request, exc)
-    elif exc.status_code == 403:
-        return await SecureErrorHandler.authorization_error_handler(request, exc)
-    elif exc.status_code == 422:
-        return await SecureErrorHandler.validation_error_handler(request, exc)
-    elif exc.status_code == 429:
-        return await SecureErrorHandler.rate_limit_error_handler(request, exc)
-    else:
-        # Generic HTTP error handling
-        request_id = ErrorResponseHandler.log_error(exc, request)
-        response = ErrorResponseHandler.create_error_response(
-            status_code=exc.status_code,
-            message=exc.detail,
-            request_id=request_id
-        )
-        return JSONResponse(status_code=exc.status_code, content=response)
-
-@app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
-    """Enhanced general exception handler"""
-    return await SecureErrorHandler.internal_error_handler(request, exc)
-
-# Include authentication routes
-app.include_router(router, prefix="/api/v1/auth", tags=["Authentication"])
-
-# Enhanced root endpoint with security information
-@app.get("/")
-async def root():
-    """
-    Root endpoint with service information and security status
-    """
-    return {
-        "service": "EduNerve Authentication Service",
-        "version": "2.0.0",
-        "status": "running",
-        "security": "enhanced",
-        "description": "Multi-tenant authentication system with comprehensive security for African secondary schools",
-        "features": [
-            "JWT-based authentication",
-            "Role-based access control",
-            "Multi-tenant architecture",
-            "Enhanced security validation",
-            "Secure CORS configuration",
-            "Input sanitization",
-            "Error handling with audit logging"
-        ],
-        "endpoints": {
-            "docs": "/docs" if os.getenv("ENVIRONMENT", "development") == "development" else "disabled",
-            "redoc": "/redoc" if os.getenv("ENVIRONMENT", "development") == "development" else "disabled",
-            "health": "/api/v1/auth/health",
-            "register": "/api/v1/auth/register",
-            "login": "/api/v1/auth/login"
-        },
-        "security_features": {
-            "password_requirements": "12+ chars, mixed case, numbers, special chars",
-            "token_expiration": "60 minutes",
-            "cors_policy": "environment-specific",
-            "input_validation": "comprehensive",
-            "error_masking": "enabled"
-        }
+# Rate limiting middleware
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    if not rate_limiter:
+        return await call_next(request)
+    
+    # Get client IP
+    client_ip = request.client.host
+    if "X-Forwarded-For" in request.headers:
+        client_ip = request.headers["X-Forwarded-For"].split(",")[0].strip()
+    
+    # Define rate limits for different endpoints
+    rate_limits = {
+        "/auth/login": {"limit": 5, "window": 60},
+        "/auth/register": {"limit": 3, "window": 60},
+        "/auth/password-reset": {"limit": 3, "window": 3600},
     }
+    
+    # Check rate limit
+    path = request.url.path
+    if path in rate_limits:
+        limit_config = rate_limits[path]
+        rate_key = f"rate_limit:{client_ip}:{path}"
+        
+        if not rate_limiter.is_allowed(rate_key, limit_config["limit"], limit_config["window"]):
+            remaining = rate_limiter.get_remaining(rate_key, limit_config["limit"])
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Rate limit exceeded. Please try again later."
+            )
+    
+    return await call_next(request)
 
-# Enhanced health check endpoint
+# Include routers
+app.include_router(auth.router)
+app.include_router(profile.router)
+
+# Health check endpoints
 @app.get("/health")
 async def health_check():
-    """
-    Enhanced health check endpoint with security status
-    """
+    """Basic health check"""
     return {
         "status": "healthy",
-        "service": "EduNerve Authentication Service",
-        "version": "2.0.0",
-        "security": "enhanced",
-        "environment": os.getenv("ENVIRONMENT", "development"),
-        "timestamp": "2024-01-01T00:00:00Z",
-        "components": {
-            "database": "connected",
-            "jwt_system": "operational",
-            "security_validation": "active",
-            "cors_protection": "enabled"
-        }
+        "service": "auth-service",
+        "version": "1.0.0",
+        "timestamp": time.time()
     }
 
-# Development server configuration
+@app.get("/health/detailed")
+async def detailed_health_check():
+    """Detailed health check with dependencies"""
+    health_status = {
+        "status": "healthy",
+        "service": "auth-service",
+        "version": "1.0.0",
+        "timestamp": time.time(),
+        "checks": {}
+    }
+    
+    # Database check
+    try:
+        if check_database_connection():
+            health_status["checks"]["database"] = "healthy"
+        else:
+            health_status["checks"]["database"] = "unhealthy"
+            health_status["status"] = "unhealthy"
+    except Exception as e:
+        health_status["checks"]["database"] = f"error: {str(e)}"
+        health_status["status"] = "unhealthy"
+    
+    # Redis check
+    if redis_client:
+        try:
+            redis_client.ping()
+            health_status["checks"]["redis"] = "healthy"
+        except Exception as e:
+            health_status["checks"]["redis"] = f"error: {str(e)}"
+            health_status["status"] = "degraded"
+    else:
+        health_status["checks"]["redis"] = "not configured"
+    
+    return health_status
+
+# Root endpoint
+@app.get("/")
+async def root():
+    """Root endpoint with service information"""
+    return {
+        "service": "EduNerve Authentication Service",
+        "version": "1.0.0",
+        "status": "operational",
+        "docs": "/docs",
+        "health": "/health"
+    }
+
+# Global exception handler
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Global exception handler for unhandled errors"""
+    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": "Internal server error"}
+    )
+
+# HTTP exception handler
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Custom HTTP exception handler"""
+    logger.warning(f"HTTP exception: {exc.status_code} - {exc.detail}")
+    
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "detail": exc.detail,
+            "timestamp": time.time(),
+            "path": request.url.path
+        }
+    )
+
 if __name__ == "__main__":
-    # Enhanced development server with security considerations
+    # For development only
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=int(os.getenv("PORT", 8000)),
-        reload=os.getenv("ENVIRONMENT", "development") == "development",
-        log_level=os.getenv("LOG_LEVEL", "info"),
-        access_log=True,
-        # Security configurations for development
-        ssl_keyfile=os.getenv("SSL_KEYFILE") if os.getenv("ENVIRONMENT") == "production" else None,
-        ssl_certfile=os.getenv("SSL_CERTFILE") if os.getenv("ENVIRONMENT") == "production" else None,
+        port=8001,
+        reload=True,
+        log_level="info",
+        access_log=True
     )
+

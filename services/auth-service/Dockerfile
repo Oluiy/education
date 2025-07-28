@@ -1,5 +1,10 @@
 FROM python:3.11-slim
 
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+
 WORKDIR /app
 
 # Install system dependencies with retry logic and alternative mirrors
@@ -7,6 +12,7 @@ RUN apt-get update --fix-missing || apt-get update && \
     apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
+    postgresql-client \
     curl \
     ca-certificates \
     && apt-get clean && \

@@ -25,6 +25,10 @@ from app.error_handling import (
 )
 from app.security_config import SecurityConfig, get_security_headers
 
+# API router imports
+from api.term_wizard import router as term_wizard_router
+from api.accounting import router as accounting_router
+
 # Load environment variables
 load_dotenv()
 
@@ -91,6 +95,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(term_wizard_router, prefix="/api/v1")
+app.include_router(accounting_router, prefix="/api/v1")
 
 # Mount static files
 app.mount("/reports", StaticFiles(directory="reports"), name="reports")
