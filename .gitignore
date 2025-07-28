@@ -445,3 +445,11 @@ jenkins/secrets/
 # Keep LICENSE but ignore temp legal files
 legal/temp/
 compliance/temp/
+
+# ==========================
+# Teacher Dashboard (Work in Progress)
+# ==========================
+# Ignore teacher folder and all its contents
+teacher/
+**/teacher/
+frontend/src/app/teacher/

@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
-import { useFormValidation, validationHelpers } from '@/lib/useFormValidation'
+import { useFormValidation, validationHelpers } from 'src/lib/useFormValidation'
 import { useAuth } from '@/contexts/AuthContext'
 import { LoadingSpinner } from '@/components/ui/Loading'
 import { ErrorAlert } from '@/components/ui/Error'
@@ -18,9 +18,31 @@ interface LoginForm {
 
 export default function LoginPage() {
   const router = useRouter()
-  const { login } = useAuth()
+  const { login, user } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [apiError, setApiError] = useState('')
+
+  // Redirect based on user role after successful login
+  useEffect(() => {
+    if (user) {
+      switch (user.role) {
+        case 'teacher':
+          router.push('/teacher/dashboard')
+          break
+        case 'student':
+          router.push('/student/dashboard')
+          break
+        case 'parent':
+          router.push('/parent/dashboard')
+          break
+        case 'admin':
+          router.push('/admin/dashboard')
+          break
+        default:
+          router.push('/dashboard')
+      }
+    }
+  }, [user, router])
 
   const {
     values,
@@ -45,11 +67,13 @@ export default function LoginPage() {
         minLength: 6
       }
     },
-    onSubmit: async (formData) => {
+    onSubmit: async (formData: LoginForm) => {
       try {
         setApiError('')
         await login(formData.email, formData.password)
-        router.push('/dashboard')
+        
+        // The AuthContext should set the user state after successful login
+        // We'll redirect based on user role in useEffect below
       } catch (error: any) {
         console.error('Login error:', error)
         setApiError(error.message || 'Login failed. Please check your credentials.')
