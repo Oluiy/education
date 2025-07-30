@@ -1,8 +1,8 @@
 export default function Stats() {
   const stats = [
-    { label: 'Active Schools', value: '500+', description: 'Across 15 African countries' },
-    { label: 'Students Served', value: '50K+', description: 'Learning every day' },
-    { label: 'Course Completion', value: '95%', description: 'Average completion rate' },
+    { label: 'Active Schools', value: '10+', description: 'Across 15 African countries' },
+    { label: 'Students Served', value: '2K+', description: 'Learning every day' },
+    { label: 'Course Completion', value: '98%', description: 'Average completion rate' },
     { label: 'Offline Capability', value: '100%', description: 'Full functionality offline' }
   ]
 

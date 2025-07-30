@@ -566,7 +566,7 @@ export default function WAECPaperGenerator() {
               >
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <SparklesIcon className="w-5 h-5 mr-2 text-purple-600" />
-                  AI Features
+                  AI Features {/* Must Upload WAEC syllabus that the AI uses for it's training and answering of Questions */}
                 </h3>
                 
                 <div className="space-y-3">
@@ -674,8 +674,8 @@ export default function WAECPaperGenerator() {
                       </div>
                       {question.options && (
                         <div className="mt-2 ml-4 space-y-1">
-                          {question.options.map((option, oIndex) => (
-                            <div key={oIndex} className="text-sm text-gray-600">{option}</div>
+                          {question.options.map((option, optIndex) => (
+                            <div key={optIndex} className="text-sm text-gray-600">{option}</div>
                           ))}
                         </div>
                       )}

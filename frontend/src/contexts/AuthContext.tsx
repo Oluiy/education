@@ -10,7 +10,7 @@ export interface User {
   name: string
   firstName?: string
   lastName?: string
-  role: 'student' | 'teacher' | 'admin'
+  role: 'student' | 'teacher' | 'admin' | 'parent'
   avatar?: string
   schoolId?: string
   grade?: string
