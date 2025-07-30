@@ -1,0 +1,61 @@
+{
+  "timestamp": 1753859539.9900482,
+  "results": {
+    "auth": {
+      "status": "healthy",
+      "url": "http://localhost:8001",
+      "endpoint": "/health",
+      "response_time": 0.029258
+    },
+    "admin": {
+      "status": "healthy",
+      "url": "http://localhost:8002",
+      "endpoint": "/health",
+      "response_time": 0.009301
+    },
+    "assistant": {
+      "status": "healthy",
+      "url": "http://localhost:8003",
+      "endpoint": "/health",
+      "response_time": 0.007947
+    },
+    "content-quiz": {
+      "status": "healthy",
+      "url": "http://localhost:8004",
+      "endpoint": "/health",
+      "response_time": 0.00834
+    },
+    "file-storage": {
+      "status": "running",
+      "url": "http://localhost:8005",
+      "status_code": 404,
+      "response_time": 0.003984
+    },
+    "notification": {
+      "status": "unreachable",
+      "url": "http://localhost:8006",
+      "error": "All connection attempts failed"
+    },
+    "progress": {
+      "status": "unreachable",
+      "url": "http://localhost:8007",
+      "error": "All connection attempts failed"
+    },
+    "sync-messaging": {
+      "status": "unreachable",
+      "url": "http://localhost:8008",
+      "error": "All connection attempts failed"
+    },
+    "gateway": {
+      "status": "healthy",
+      "url": "http://localhost:8000",
+      "endpoint": "/health",
+      "response_time": 0.251868
+    }
+  },
+  "summary": {
+    "total_services": 9,
+    "healthy_services": 6,
+    "unhealthy_services": 3
+  }
+}
