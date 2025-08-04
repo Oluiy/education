@@ -106,13 +106,13 @@ export default function Hero() {
 
           {/* Trust indicators */}
           <motion.div variants={fadeInUp} className="text-center">
-            <p className="text-sm text-gray-500 mb-4">Trusted by schools across Africa</p>
+            <p className="text-sm text-gray-900 mb-4">Trusted by schools across Africa</p>
             <div className="flex justify-center items-center space-x-8 opacity-60">
-              <div className="text-xs font-medium text-gray-400">500+ Schools</div>
-              <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-              <div className="text-xs font-medium text-gray-400">50,000+ Students</div>
-              <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-              <div className="text-xs font-medium text-gray-400">15 Countries</div>
+              <div className="text-xs font-medium text-gray-900">500+ Schools</div>
+              <div className="w-1 h-1 bg-gray-700 rounded-full"></div>
+              <div className="text-xs font-medium text-gray-900">50,000+ Students</div>
+              <div className="w-1 h-1 bg-gray-700 rounded-full"></div>
+              <div className="text-xs font-medium text-gray-900">15 Countries</div>
             </div>
           </motion.div>
         </motion.div>

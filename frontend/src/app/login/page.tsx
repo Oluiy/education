@@ -19,6 +19,7 @@ interface LoginForm {
 export default function LoginPage() {
   const router = useRouter()
   const { login, user } = useAuth()
+
   const [showPassword, setShowPassword] = useState(false)
   const [apiError, setApiError] = useState('')
 
