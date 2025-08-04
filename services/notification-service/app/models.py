@@ -1,9 +1,30 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey, JSON
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey, JSON, Enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
+import enum
 
 Base = declarative_base()
+
+class NotificationChannel(enum.Enum):
+    EMAIL = "email"
+    SMS = "sms"
+    WHATSAPP = "whatsapp"
+    PUSH = "push"
+    IN_APP = "in_app"
+
+class NotificationStatus(enum.Enum):
+    PENDING = "pending"
+    SENT = "sent"
+    DELIVERED = "delivered"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+class NotificationPriority(enum.Enum):
+    LOW = "low"
+    NORMAL = "normal"
+    HIGH = "high"
+    URGENT = "urgent"
 
 class User(Base):
     __tablename__ = "users"
@@ -147,6 +168,31 @@ class NotificationLog(Base):
     __tablename__ = "notification_logs"
     
     id = Column(Integer, primary_key=True, index=True)
+    phone_number = Column(String(20), nullable=False)
+    message_type = Column(String(50), nullable=False)
+    content = Column(Text, nullable=False)
+    channel = Column(Enum(NotificationChannel), nullable=False)
+    status = Column(Enum(NotificationStatus), default=NotificationStatus.PENDING)
+    external_message_id = Column(String(100))  # Provider's message ID
+    error_message = Column(Text)
+    sent_at = Column(DateTime)
+    delivered_at = Column(DateTime)
+    metadata = Column(JSON, default={})
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class WhatsAppTemplate(Base):
+    __tablename__ = "whatsapp_templates"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True, nullable=False)
+    template_id = Column(String(100), unique=True, nullable=False)  # Provider template ID
+    category = Column(String(50), nullable=False)  # attendance, academic, fee, etc.
+    content = Column(Text, nullable=False)
+    variables = Column(JSON, default=[])  # List of template variables
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     queue_id = Column(Integer, ForeignKey("notification_queue.id"))
     user_id = Column(Integer, ForeignKey("users.id"))
     notification_type = Column(String(20), nullable=False)
