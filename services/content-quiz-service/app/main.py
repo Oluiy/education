@@ -198,6 +198,11 @@ app.include_router(study_sessions.router, prefix="/api/v1/study", tags=["Study S
 app.include_router(study_goals.router, prefix="/api/v1/study", tags=["Study Goals"])
 app.include_router(badges.router, prefix="/api/v1/study", tags=["Badges"])
 
+# Include new API routers
+from .api import personalization, study_timer
+app.include_router(personalization.router, prefix="/api/v1", tags=["Personalization"])
+app.include_router(study_timer.router, prefix="/api/v1", tags=["Study Timer"])
+
 
 # Production exception handlers
 @app.exception_handler(HTTPException)

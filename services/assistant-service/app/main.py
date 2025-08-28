@@ -95,6 +95,10 @@ audio_dir = os.getenv('AUDIO_STORAGE_PATH', 'audio_files')
 if os.path.exists(audio_dir):
     app.mount("/audio", StaticFiles(directory=audio_dir), name="audio")
 
+# Include new API routers
+from .api import assistant
+app.include_router(assistant.router, prefix="/api/v1", tags=["Smart Assistant"])
+
 # Health check endpoint
 @app.get("/health")
 async def health_check():

@@ -358,8 +358,8 @@ class QuestionResponse(Base):
     question_id = Column(Integer, ForeignKey("questions.id"))
     
     # Response data
-    selected_option_id = Column(Integer, ForeignKey("question_options.id"))
-    response_text = Column(Text)  # For essay questions
+    selected_option_id = Column(Integer, ForeignKey("question_options.id"), nullable=True)
+    text_response = Column(Text, nullable=True)
     is_correct = Column(Boolean, default=False)
     points_earned = Column(Float, default=0.0)
     
@@ -370,3 +370,140 @@ class QuestionResponse(Base):
     # Relationships
     attempt = relationship("QuizAttempt", back_populates="responses")
     question = relationship("Question", back_populates="responses")
+    selected_option = relationship("QuestionOption")
+
+class ContentFile(Base):
+    """File attachments for content"""
+    __tablename__ = "content_files"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    content_type = Column(String(50))  # lesson, quiz, question
+    content_id = Column(Integer)
+    
+    # File details
+    file_name = Column(String(255), nullable=False)
+    file_path = Column(String(500), nullable=False)
+    file_size = Column(Integer)  # in bytes
+    mime_type = Column(String(100))
+    
+    # Metadata
+    description = Column(Text)
+    is_public = Column(Boolean, default=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+# ========================================
+# PERSONALIZATION MODELS
+# ========================================
+
+class PersonalizationQuiz(Base):
+    """Student personalization quiz responses"""
+    __tablename__ = "personalization_quizzes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
+    
+    # Quiz responses
+    learning_style = Column(String(50))  # visual, auditory, kinesthetic
+    preferred_subjects = Column(JSON)  # List of subject names
+    difficulty_preference = Column(String(20))  # easy, medium, hard
+    study_time_preference = Column(String(20))  # morning, afternoon, evening
+    resource_preferences = Column(JSON)  # {"video": true, "text": false, "audio": true, "interactive": true}
+    
+    # Additional preferences
+    study_goals = Column(JSON)  # List of learning goals
+    target_score = Column(Float)  # Target exam score
+    study_hours_per_day = Column(Float, default=2.0)
+    preferred_session_duration = Column(Integer, default=25)  # minutes
+    
+    # Analysis results
+    learning_style_analysis = Column(JSON)  # Detailed analysis
+    strength_areas = Column(JSON)  # List of strong subjects
+    weak_areas = Column(JSON)  # List of weak subjects
+    recommendations = Column(JSON)  # AI-generated recommendations
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class StudentPreferences(Base):
+    """Student learning preferences and settings"""
+    __tablename__ = "student_preferences"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
+    
+    # Learning preferences
+    preferred_learning_methods = Column(JSON)  # ["video", "practice", "reading"]
+    difficulty_level = Column(String(20), default="medium")
+    study_pace = Column(String(20), default="normal")  # slow, normal, fast
+    
+    # Content preferences
+    preferred_content_types = Column(JSON)  # ["video", "text", "audio", "interactive"]
+    auto_play_videos = Column(Boolean, default=True)
+    show_transcripts = Column(Boolean, default=True)
+    enable_audio_summaries = Column(Boolean, default=True)
+    
+    # Study preferences
+    preferred_study_times = Column(JSON)  # ["morning", "afternoon", "evening"]
+    session_duration = Column(Integer, default=25)  # minutes
+    break_duration = Column(Integer, default=5)  # minutes
+    daily_study_goal = Column(Integer, default=120)  # minutes
+    
+    # Accessibility preferences
+    text_to_speech_enabled = Column(Boolean, default=False)
+    large_text_mode = Column(Boolean, default=False)
+    high_contrast_mode = Column(Boolean, default=False)
+    dyslexia_friendly_font = Column(Boolean, default=False)
+    
+    # Notification preferences
+    study_reminders = Column(Boolean, default=True)
+    achievement_notifications = Column(Boolean, default=True)
+    progress_updates = Column(Boolean, default=True)
+    quiet_hours_start = Column(String(5), default="22:00")  # HH:MM
+    quiet_hours_end = Column(String(5), default="08:00")  # HH:MM
+    
+    # Language and region
+    preferred_language = Column(String(10), default="en")
+    timezone = Column(String(50), default="UTC")
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+# ========================================
+# STUDY TIMER MODELS
+# ========================================
+
+class StudyTimer(Base):
+    """Study timer configuration and settings"""
+    __tablename__ = "study_timers"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
+    
+    # Timer configuration
+    timer_name = Column(String(100), nullable=False)
+    study_duration = Column(Integer, default=25)  # minutes
+    break_duration = Column(Integer, default=5)  # minutes
+    long_break_duration = Column(Integer, default=15)  # minutes
+    sessions_before_long_break = Column(Integer, default=4)
+    
+    # Timer settings
+    auto_start_breaks = Column(Boolean, default=True)
+    auto_start_sessions = Column(Boolean, default=False)
+    sound_enabled = Column(Boolean, default=True)
+    notifications_enabled = Column(Boolean, default=True)
+    
+    # Subject association
+    subject_id = Column(Integer, ForeignKey("subjects.id"), nullable=True)
+    topic_id = Column(Integer, ForeignKey("topics.id"), nullable=True)
+    
+    # Status
+    is_active = Column(Boolean, default=True)
+    is_default = Column(Boolean, default=False)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
