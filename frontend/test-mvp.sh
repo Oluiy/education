@@ -7,10 +7,7 @@ echo "🎯 EduNerve MVP Testing & Deployment Script"
 echo "==========================================="
 
 # Check if we're in the correct directory
-if [ ! -f "package.json" ]; then
-    echo "❌ Error: Please run this script from the frontend directory"
-    exit 1
-fi
+
 
 echo "📋 Step 1: Environment Check"
 echo "----------------------------"
