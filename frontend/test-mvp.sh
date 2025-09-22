@@ -3,8 +3,6 @@
 # EduNerve MVP Testing & Deployment Script
 # Run this script to verify your MVP is ready for production
 
-echo "🎯 EduNerve MVP Testing & Deployment Script"
-echo "==========================================="
 
 # Check if we're in the correct directory
 
