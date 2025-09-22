@@ -7,7 +7,7 @@ import { LoadingPage } from '@/components/ui/Loading'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
-  allowedRoles?: ('student' | 'teacher' | 'admin')[]
+  allowedRoles?: ('student' | 'teacher' | 'admin' | 'parent')[]
   requiredPermissions?: string[]
   fallbackPath?: string
 }
@@ -65,7 +65,7 @@ export function ProtectedRoute({
 // Higher-order component for role-based access
 export function withRoleAccess(
   WrappedComponent: React.ComponentType<any>,
-  allowedRoles: ('student' | 'teacher' | 'admin')[]
+  allowedRoles: ('student' | 'teacher' | 'admin' | 'parent')[]
 ) {
   return function RoleProtectedComponent(props: any) {
     return (
@@ -91,4 +91,8 @@ export const AdminOnly = ({ children }: { children: React.ReactNode }) => (
 
 export const TeacherOrAdmin = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute allowedRoles={['teacher', 'admin']}>{children}</ProtectedRoute>
+)
+
+export const ParentOnly = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute allowedRoles={['parent']}>{children}</ProtectedRoute>
 )
