@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { getFCMToken, onForegroundMessage } from '@/lib/firebase'
+import { getFCMToken, onForegroundMessage } from '../lib/firebase'
 import { useAuth } from './AuthContext'
 import { useToast } from './ToastContext'
 
