@@ -5,7 +5,6 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
-import { useFormValidation, validationHelpers } from '../../lib/useFormValidation'
 import { useAuth } from '@/contexts/AuthContext'
 import { LoadingSpinner } from '@/components/ui/Loading'
 import { ErrorAlert } from '@/components/ui/Error'
@@ -22,6 +21,13 @@ export default function LoginPage() {
 
   const [showPassword, setShowPassword] = useState(false)
   const [apiError, setApiError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formData, setFormData] = useState<LoginForm>({
+    email: '',
+    password: '',
+    rememberMe: false
+  })
+  const [errors, setErrors] = useState<{[key: string]: string}>({})
 
   // Redirect based on user role after successful login
   useEffect(() => {
@@ -45,42 +51,55 @@ export default function LoginPage() {
     }
   }, [user, router])
 
-  const {
-    values,
-    errors,
-    isSubmitting,
-    handleChange,
-    handleSubmit,
-    setErrors
-  } = useFormValidation<LoginForm>({
-    initialValues: {
-      email: '',
-      password: '',
-      rememberMe: false
-    },
-    validationRules: {
-      email: {
-        required: true,
-        custom: validationHelpers.email
-      },
-      password: {
-        required: true,
-        minLength: 6
-      }
-    },
-    onSubmit: async (formData: LoginForm) => {
-      try {
-        setApiError('')
-        await login(formData.email, formData.password)
-        
-        // The AuthContext should set the user state after successful login
-        // We'll redirect based on user role in useEffect below
-      } catch (error: any) {
-        console.error('Login error:', error)
-        setApiError(error.message || 'Login failed. Please check your credentials.')
-      }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }))
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }))
     }
-  })
+  }
+
+  const validateForm = () => {
+    const newErrors: {[key: string]: string} = {}
+    
+    if (!formData.email) {
+      newErrors.email = 'Email is required'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address'
+    }
+    
+    if (!formData.password) {
+      newErrors.password = 'Password is required'
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters'
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!validateForm()) {
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      setApiError('')
+      await login(formData.email, formData.password)
+    } catch (error: any) {
+      console.error('Login error:', error)
+      setApiError(error.message || 'Login failed. Please check your credentials.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <div className="min-h-screen flex">
@@ -127,10 +146,10 @@ export default function LoginPage() {
                 name="email"
                 type="email"
                 autoComplete="email"
+                value={formData.email}
+                onChange={handleChange}
                 className={`input ${errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
                 placeholder="Enter your email"
-                value={values.email}
-                onChange={handleChange}
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-600">{errors.email}</p>
@@ -149,7 +168,7 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   className={`input pr-10 ${errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
                   placeholder="Enter your password"
-                  value={values.password}
+                  value={formData.password}
                   onChange={handleChange}
                 />
                 <button
@@ -176,7 +195,7 @@ export default function LoginPage() {
                   name="rememberMe"
                   type="checkbox"
                   className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                  checked={values.rememberMe}
+                  checked={formData.rememberMe}
                   onChange={handleChange}
                 />
                 <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-700">
