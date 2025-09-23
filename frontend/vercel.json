@@ -9,11 +9,6 @@
   "env": {
     "NEXT_PUBLIC_API_GATEWAY_URL": "@next_public_api_gateway_url"
   },
-  "functions": {
-    "src/app/api/**/*.ts": {
-      "maxDuration": 30
-    }
-  },
   "headers": [
     {
       "source": "/(.*)",
