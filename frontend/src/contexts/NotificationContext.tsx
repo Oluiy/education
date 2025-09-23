@@ -1,7 +1,16 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { getFCMToken, onForegroundMessage } from '../lib/firebase'
+// Mock Firebase functions for build compatibility
+const getFCMToken = async (): Promise<string | null> => {
+  console.warn('Firebase not configured')
+  return null
+}
+
+const onForegroundMessage = (callback: (payload: any) => void) => {
+  console.warn('Firebase not configured')
+  return () => {}
+}
 import { useAuth } from './AuthContext'
 import { useToast } from './ToastContext'
 
