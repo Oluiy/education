@@ -4,7 +4,7 @@ Environment variables and application settings
 """
 
 import os
-from pydantic import BaseSettings
+from pydantic import BaseSettings, validator
 from typing import Optional
 
 class Settings(BaseSettings):
@@ -28,11 +28,12 @@ class Settings(BaseSettings):
     DATABASE_POOL_SIZE: int = 20
     DATABASE_MAX_OVERFLOW: int = 30
     
-    # Redis settings
+    # Redis settings (supports REDIS_URL for Heroku)
     REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
     REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
     REDIS_PASSWORD: Optional[str] = os.getenv("REDIS_PASSWORD")
     REDIS_DB: int = int(os.getenv("REDIS_DB", "0"))
+    REDIS_URL: Optional[str] = os.getenv("REDIS_URL")
     
     # Rate limiting
     LOGIN_RATE_LIMIT: int = 5  # requests per minute
@@ -56,13 +57,21 @@ class Settings(BaseSettings):
     API_GATEWAY_URL: str = os.getenv("API_GATEWAY_URL", "http://localhost:8000")
     NOTIFICATION_SERVICE_URL: str = os.getenv("NOTIFICATION_SERVICE_URL", "http://localhost:8003")
     
-    # CORS settings
-    ALLOWED_ORIGINS: list = [
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "https://edunerve.com",
-        "https://app.edunerve.com"
-    ]
+    # CORS settings (can override via ALLOWED_ORIGINS env: comma-separated)
+    ALLOWED_ORIGINS: list = []
+
+    @validator("ALLOWED_ORIGINS", pre=True, always=True)
+    def build_allowed_origins(cls, v):  # type: ignore
+        env_val = os.getenv("ALLOWED_ORIGINS")
+        if env_val:
+            return [o.strip() for o in env_val.split(",") if o.strip()]
+        # default fallback
+        return [
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "https://edunerve.com",
+            "https://app.edunerve.com"
+        ]
     
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
@@ -151,6 +160,24 @@ def get_database_config():
 # Redis configuration
 def get_redis_config():
     """Get Redis configuration"""
+    if settings.REDIS_URL:
+        # Parse redis://[:password@]host:port/db
+        # Basic manual parse to avoid adding external deps
+        import re
+        pattern = r"redis://(?:(?P<pw>[^:@]+)@)?(?P<host>[^:/]+)(?::(?P<port>\d+))?(?:/(?P<db>\d+))?"
+        match = re.match(pattern, settings.REDIS_URL)
+        if match:
+            gd = match.groupdict()
+            return {
+                "host": gd.get("host", settings.REDIS_HOST),
+                "port": int(gd.get("port") or settings.REDIS_PORT),
+                "db": int(gd.get("db") or settings.REDIS_DB),
+                "password": gd.get("pw") or settings.REDIS_PASSWORD,
+                "decode_responses": True,
+                "socket_timeout": 5,
+                "socket_connect_timeout": 5,
+                "retry_on_timeout": True,
+            }
     config = {
         "host": settings.REDIS_HOST,
         "port": settings.REDIS_PORT,
@@ -160,10 +187,8 @@ def get_redis_config():
         "socket_connect_timeout": 5,
         "retry_on_timeout": True,
     }
-    
     if settings.REDIS_PASSWORD:
         config["password"] = settings.REDIS_PASSWORD
-    
     return config
 
 # CORS configuration
