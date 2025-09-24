@@ -1,9 +1,30 @@
 // src/api/auth.ts
 import { User } from '@/contexts/AuthContext'
 
-// Normalize base URL (strip trailing slash)
-const rawBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+// Normalize base URL (strip trailing slash). We rely on build-time replacement of NEXT_PUBLIC_API_URL.
+// If it's missing at build time in a production (non-localhost) environment, log a loud error to surface misconfiguration.
+let rawBase = process.env.NEXT_PUBLIC_API_URL || ''
+if (!rawBase) {
+  // Build-time env missing.
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname
+    if (host !== 'localhost' && host !== '127.0.0.1') {
+      // Expose a global so user can inspect quickly in console.
+      ;(window as any).__MISSING_NEXT_PUBLIC_API_URL__ = true
+      console.error('[auth] NEXT_PUBLIC_API_URL was not defined at build time. Falling back to http://localhost:8000 which will NOT work in production. Set it in Vercel Project > Settings > Environment Variables and redeploy.')
+    }
+  }
+  rawBase = 'http://localhost:8000'
+}
 const API_URL = rawBase.replace(/\/$/, '')
+// Temporary debug: expose the resolved value (remove after verification)
+if (typeof window !== 'undefined') {
+  ;(window as any).__API_URL__ = API_URL
+  if (process.env.NODE_ENV !== 'production') {
+    // eslint-disable-next-line no-console
+    console.log('[auth] Resolved API_URL =', API_URL)
+  }
+}
 
 export type { User }
 
@@ -55,6 +76,11 @@ async function parseError(res: Response, fallback: string) {
 }
 
 export async function login(usernameOrEmail: string, password: string): Promise<{ user: User; token: string }> {
+  // Debug instrumentation
+  if (typeof window !== 'undefined') {
+    // eslint-disable-next-line no-console
+    console.log('[auth.login] using API_URL', API_URL)
+  }
   const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -69,6 +95,10 @@ export async function login(usernameOrEmail: string, password: string): Promise<
 
 // signup: map UI form fields to backend register schema, then auto-login to fetch tokens
 export async function signup(formData: any): Promise<{ user: User; token: string }> {
+  if (typeof window !== 'undefined') {
+    // eslint-disable-next-line no-console
+    console.log('[auth.signup] starting signup with API_URL', API_URL)
+  }
   const email: string = formData.email
   const first: string = formData.firstName || ''
   const last: string = formData.lastName || ''
@@ -97,6 +127,10 @@ export async function signup(formData: any): Promise<{ user: User; token: string
     body: JSON.stringify(payload)
   })
   if (!regRes.ok) {
+    if (typeof window !== 'undefined') {
+      // eslint-disable-next-line no-console
+      console.warn('[auth.signup] register failed status', regRes.status)
+    }
     throw new Error(await parseError(regRes, 'Signup failed'))
   }
 
