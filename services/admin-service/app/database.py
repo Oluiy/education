@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Database configuration
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres123@db:5432/edunerve")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://edunerve:password@localhost:5432/edunerve")
 
 # Create engine based on database type
 if DATABASE_URL.startswith("sqlite"):

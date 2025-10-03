@@ -4,7 +4,7 @@
 # ==============================================================================
 
 # ==========================
-# Environment & Secrets
+# Environment & Secrets - CRITICAL SECURITY
 # ==========================
 .env
 .env.local
@@ -15,6 +15,16 @@
 *.env
 !.env.example
 !.env.template
+
+# Specific service .env files
+api-gateway/.env
+services/*/.env
+frontend/.env
+frontend/.env.local
+
+# Docker environment files with secrets
+docker-compose.env
+docker-compose.override.yml
 
 # ==========================
 # Python
